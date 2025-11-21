@@ -1,6 +1,26 @@
 [![build status](https://img.shields.io/github/actions/workflow/status/mizdebsk/rhel-drivers/ci.yml?branch=main)](https://github.com/mizdebsk/rhel-drivers/actions/workflows/ci.yml?query=branch%3Amain)
 [![License](https://img.shields.io/github/license/mizdebsk/rhel-drivers.svg?label=License)](https://www.gnu.org/licenses/gpl-3.0-standalone.html)
 
+
+rhel-drivers
+============
+
+a tool for hardware driver management on RHEL
+
+The rhel-drivers tool is a command-line utility that provides a
+consistent interface for installing and maintaining third-party
+AI-accelerator and GPU driver stacks on Red Hat Enterprise Linux
+(RHEL).  It detects compatible accelerator hardware, enables the
+appropriate package repositories, and installs the required kernel and
+user-mode components from RHEL-distributed packages.  The tool manages
+multi-component driver stacks end-to-end and integrates with the
+standard dnf workflow so that installed drivers are updated through
+normal system package management.
+
+
+Copying
+-------
+
 This is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your

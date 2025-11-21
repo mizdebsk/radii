@@ -5,7 +5,7 @@
 rhel-drivers
 ============
 
-a tool for hardware driver management on RHEL
+Hardware driver manager for RHEL
 
 The rhel-drivers tool is a command-line utility that provides a
 consistent interface for installing and maintaining third-party

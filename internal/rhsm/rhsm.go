@@ -33,10 +33,10 @@ func NewRepositoryManager(executor exec.Executor, systemInfo sysinfo.SysInfo) ap
 func (rm *repoMgr) EnsureRepositoriesEnabled() error {
 	if rm.systemInfo.IsRhel {
 		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
-		if rm.SubscriptionManagerPresent() {
+		if rm.subscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
 			channels := []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
-			return rm.EnsureChannelsEnabled(channels)
+			return rm.ensureChannelsEnabled(channels)
 		} else {
 			log.Warnf("Subscription Manager is absent.")
 			log.Warnf("You may need to enable appropriate repositories yourself.")
@@ -48,7 +48,7 @@ func (rm *repoMgr) EnsureRepositoriesEnabled() error {
 	return nil
 }
 
-func (rm *repoMgr) SubscriptionManagerPresent() bool {
+func (rm *repoMgr) subscriptionManagerPresent() bool {
 	stat, err := os.Stat(rhsmExecPath)
 	if err != nil || stat == nil {
 		log.Debugf("stat %s failed: %v", rhsmExecPath, err)
@@ -58,7 +58,7 @@ func (rm *repoMgr) SubscriptionManagerPresent() bool {
 	return stat.Mode().IsRegular() && stat.Mode().Perm()&0111 != 0
 }
 
-func (rm *repoMgr) EnsureChannelsEnabled(channels []string) error {
+func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	log.Logf("checking repository status")
 	allEnabled := true
 	args := []string{"repos"}

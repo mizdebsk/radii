@@ -1,14 +1,13 @@
 package core
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, drivers []string) error {
+func Install(deps api.CoreDeps, opts api.InstallOptions, drivers []string) error {
 
 	log.Debugf("options: AutoDetect=%v DryRun=%v Force=%v", opts.AutoDetect, opts.DryRun, opts.Force)
 	log.Debugf("arguments: %v", drivers)
@@ -25,7 +24,7 @@ func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, dr
 	if opts.AutoDetect {
 		hardwareDetected := false
 		for _, provider := range deps.Providers {
-			detected, err := provider.DetectHardware(ctx)
+			detected, err := provider.DetectHardware()
 			if err != nil {
 				log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
 				continue
@@ -33,7 +32,7 @@ func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, dr
 			if detected {
 				hardwareDetected = true
 				log.Logf("detected %s hardware", provider.GetName())
-				available, err := provider.ListAvailable(ctx)
+				available, err := provider.ListAvailable()
 				if err != nil {
 					return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
 				}
@@ -57,14 +56,14 @@ func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, dr
 			}
 			for _, provider := range deps.Providers {
 				if driver.ProviderID == provider.GetID() {
-					available, err := provider.ListAvailable(ctx)
+					available, err := provider.ListAvailable()
 					if err != nil {
 						return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
 					}
 					for _, avail := range available {
 						if avail.Version == driver.Version {
 							if !opts.Force {
-								compat, err := provider.DetectHardware(ctx)
+								compat, err := provider.DetectHardware()
 								if err != nil {
 									log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
 								} else if !compat {
@@ -89,7 +88,7 @@ func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, dr
 	if deps.RepoVerifier == nil {
 		return fmt.Errorf("no RepositoryManager provided")
 	}
-	if err := deps.RepoVerifier.EnsureRepositoriesEnabled(ctx); err != nil {
+	if err := deps.RepoVerifier.EnsureRepositoriesEnabled(); err != nil {
 		return fmt.Errorf("failed to verify/enable repositories: %w", err)
 	}
 
@@ -103,7 +102,7 @@ func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, dr
 			}
 		}
 		if len(provToInstall) != 0 {
-			pkgs, err := provider.Install(ctx, provToInstall)
+			pkgs, err := provider.Install(provToInstall)
 			if err != nil {
 				return fmt.Errorf("failed to install %s drivers: %w", provider.GetName(), err)
 			}
@@ -117,7 +116,7 @@ func Install(ctx context.Context, deps api.CoreDeps, opts api.InstallOptions, dr
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if err := deps.PM.Install(ctx, allPkgs, opts); err != nil {
+	if err := deps.PM.Install(allPkgs, opts); err != nil {
 		return fmt.Errorf("failed to install pacakges: %w", err)
 	}
 

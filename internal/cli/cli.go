@@ -77,7 +77,6 @@ func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 		Aliases: []string{"in"},
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
 			opts := api.InstallOptions{
 				AutoDetect: flagAutoDetect,
 				DryRun:     flagDryRun,
@@ -91,7 +90,7 @@ func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 				return fmt.Errorf("both --auto-detect and specific drivers given")
 			}
 
-			return core.Install(ctx, deps, opts, args)
+			return core.Install(deps, opts, args)
 		},
 	}
 
@@ -114,7 +113,6 @@ func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
 		Aliases: []string{"rm"},
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
 			opts := api.RemoveOptions{
 				DryRun: flagDryRun,
 				All:    flagAll,
@@ -127,7 +125,7 @@ func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
 				return fmt.Errorf("both --all and specific drivers given")
 			}
 
-			return core.Remove(ctx, deps, opts, args)
+			return core.Remove(deps, opts, args)
 		},
 	}
 
@@ -149,10 +147,8 @@ func newListCmd(deps api.CoreDeps) *cobra.Command {
 		Aliases: []string{"ls"},
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := cmd.Context()
-
 			if flagAvailable || (!flagAvailable && !flagInstalled) {
-				res, err := core.List(ctx, deps, true, true, true)
+				res, err := core.List(deps, true, true, true)
 				if err != nil {
 					return err
 				}
@@ -175,7 +171,7 @@ func newListCmd(deps api.CoreDeps) *cobra.Command {
 			}
 
 			if flagInstalled {
-				res, err := core.List(ctx, deps, true, false, false)
+				res, err := core.List(deps, true, false, false)
 				if err != nil {
 					return err
 				}

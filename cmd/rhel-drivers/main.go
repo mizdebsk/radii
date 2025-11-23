@@ -7,6 +7,7 @@ import (
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/cli"
 	"github.com/mizdebsk/rhel-drivers/internal/dnf"
+	"github.com/mizdebsk/rhel-drivers/internal/exec"
 	"github.com/mizdebsk/rhel-drivers/internal/provider/amd"
 	"github.com/mizdebsk/rhel-drivers/internal/provider/nvidia"
 	"github.com/mizdebsk/rhel-drivers/internal/rhsm"
@@ -18,10 +19,11 @@ var version = "dev"
 
 func main() {
 	ctx := context.Background()
+	executor := exec.NewExecutor(ctx)
 	systemInfo := sysinfo.DetectSysInfo()
 
-	pm := dnf.New()
-	repoVerifier := rhsm.NewVerifier(systemInfo)
+	pm := dnf.New(executor)
+	repoVerifier := rhsm.NewVerifier(executor, systemInfo)
 	providers := []api.Provider{nvidia.NewProvider(pm), amd.NewProvider(pm)}
 	deps := api.CoreDeps{
 		PM:           pm,

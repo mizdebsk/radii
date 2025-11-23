@@ -1,7 +1,7 @@
 package api
 
 import (
-	"context"
+	"github.com/mizdebsk/rhel-drivers/internal/exec"
 )
 
 type InstallOptions struct {
@@ -15,7 +15,7 @@ type RemoveOptions struct {
 }
 
 type RepositoryManager interface {
-	EnsureRepositoriesEnabled(ctx context.Context) error
+	EnsureRepositoriesEnabled() error
 }
 
 type DriverID struct {
@@ -26,17 +26,18 @@ type DriverID struct {
 type Provider interface {
 	GetID() string
 	GetName() string
-	Install(ctx context.Context, drivers []DriverID) ([]string, error)
-	Remove(ctx context.Context, drivers []DriverID) ([]string, error)
-	ListAvailable(ctx context.Context) ([]DriverID, error)
-	ListInstalled(ctx context.Context) ([]DriverID, error)
-	DetectHardware(ctx context.Context) (bool, error)
+	Install(drivers []DriverID) ([]string, error)
+	Remove(drivers []DriverID) ([]string, error)
+	ListAvailable() ([]DriverID, error)
+	ListInstalled() ([]DriverID, error)
+	DetectHardware() (bool, error)
 }
 
 type CoreDeps struct {
 	PM           PackageManager
 	RepoVerifier RepositoryManager
 	Providers    []Provider
+	Executor     exec.Executor
 }
 
 type DriverStatus struct {

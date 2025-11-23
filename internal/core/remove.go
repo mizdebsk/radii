@@ -1,14 +1,13 @@
 package core
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-func Remove(ctx context.Context, deps api.CoreDeps, opts api.RemoveOptions, drivers []string) error {
+func Remove(deps api.CoreDeps, opts api.RemoveOptions, drivers []string) error {
 	var toRemove []api.DriverID
 
 	if len(drivers) == 0 && !opts.All {
@@ -19,7 +18,7 @@ func Remove(ctx context.Context, deps api.CoreDeps, opts api.RemoveOptions, driv
 	}
 	if opts.All {
 		for _, provider := range deps.Providers {
-			installed, err := provider.ListInstalled(ctx)
+			installed, err := provider.ListInstalled()
 			if err != nil {
 				return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
 			}
@@ -38,7 +37,7 @@ func Remove(ctx context.Context, deps api.CoreDeps, opts api.RemoveOptions, driv
 			for _, provider := range deps.Providers {
 				provID := provider.GetID()
 				if driver.ProviderID == provID {
-					installed, err := provider.ListInstalled(ctx)
+					installed, err := provider.ListInstalled()
 					if err != nil {
 						return fmt.Errorf("failed to list installed %s drivers: %w", provID, err)
 					}
@@ -64,7 +63,7 @@ func Remove(ctx context.Context, deps api.CoreDeps, opts api.RemoveOptions, driv
 			}
 		}
 		if len(provToRemove) != 0 {
-			pkgs, err := provider.Remove(ctx, provToRemove)
+			pkgs, err := provider.Remove(provToRemove)
 			if err != nil {
 				return fmt.Errorf("failed to remove %s driver: %w", provider.GetName(), err)
 			}
@@ -77,7 +76,7 @@ func Remove(ctx context.Context, deps api.CoreDeps, opts api.RemoveOptions, driv
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if err := deps.PM.Remove(ctx, allPkgs, opts); err != nil {
+	if err := deps.PM.Remove(allPkgs, opts); err != nil {
 		return fmt.Errorf("failed to remove pacakges: %w", err)
 	}
 	return nil

@@ -8,8 +8,23 @@ import (
 	"os/exec"
 )
 
-func RunCommand(ctx context.Context, command string, args []string) error {
-	cmd := exec.CommandContext(ctx, command, args...)
+type Executor interface {
+	Run(command string, args []string) error
+	RunCapture(command string, args ...string) ([]string, error)
+}
+
+type cmdExec struct {
+	ctx context.Context
+}
+
+func NewExecutor(ctx context.Context) Executor {
+	return &cmdExec{
+		ctx: ctx,
+	}
+}
+
+func (e *cmdExec) Run(command string, args []string) error {
+	cmd := exec.CommandContext(e.ctx, command, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -20,8 +35,8 @@ func RunCommand(ctx context.Context, command string, args []string) error {
 	return nil
 }
 
-func RunCommandCapture(ctx context.Context, command string, args ...string) ([]string, error) {
-	cmd := exec.CommandContext(ctx, command, args...)
+func (e *cmdExec) RunCapture(command string, args ...string) ([]string, error) {
+	cmd := exec.CommandContext(e.ctx, command, args...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

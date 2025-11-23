@@ -1,7 +1,6 @@
 package nvidia
 
 import (
-	"context"
 	"fmt"
 	"sort"
 
@@ -75,11 +74,11 @@ func packageSetStatic() []string {
 	}
 }
 
-func (i *NvidiaProvider) Install(ctx context.Context, driversInst []api.DriverID) ([]string, error) {
+func (i *NvidiaProvider) Install(driversInst []api.DriverID) ([]string, error) {
 	if i.PM == nil {
 		return []string{}, fmt.Errorf("no PackageManager provided for NVIDIA installer")
 	}
-	driversAvail, err := i.ListAvailable(ctx)
+	driversAvail, err := i.ListAvailable()
 	if err != nil {
 		return []string{}, err
 	}
@@ -96,7 +95,7 @@ outer:
 		return []string{}, fmt.Errorf("no NVIDIA driver version %s available", driver)
 	}
 
-	avail, err := i.PM.ListAvailablePackages(ctx)
+	avail, err := i.PM.ListAvailablePackages()
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to list available packages: %w", err)
 	}
@@ -109,8 +108,8 @@ outer:
 	return pkgs, nil
 }
 
-func (i *NvidiaProvider) ListAvailable(ctx context.Context) ([]api.DriverID, error) {
-	all, err := i.PM.ListAvailablePackages(ctx)
+func (i *NvidiaProvider) ListAvailable() ([]api.DriverID, error) {
+	all, err := i.PM.ListAvailablePackages()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list available packages: %w", err)
 	}
@@ -132,12 +131,12 @@ func (i *NvidiaProvider) ListAvailable(ctx context.Context) ([]api.DriverID, err
 	return drivers, nil
 }
 
-func (i *NvidiaProvider) ListInstalled(ctx context.Context) ([]api.DriverID, error) {
+func (i *NvidiaProvider) ListInstalled() ([]api.DriverID, error) {
 	if i.PM == nil {
 		return []api.DriverID{}, fmt.Errorf("no PackageManager for NVIDIA installer")
 	}
 
-	all, err := i.PM.ListInstalledPackages(ctx)
+	all, err := i.PM.ListInstalledPackages()
 	if err != nil {
 		return []api.DriverID{}, err
 	}
@@ -156,9 +155,9 @@ func (i *NvidiaProvider) ListInstalled(ctx context.Context) ([]api.DriverID, err
 	return drivers, nil
 }
 
-func (i *NvidiaProvider) Remove(ctx context.Context, drivers []api.DriverID) ([]string, error) {
+func (i *NvidiaProvider) Remove(drivers []api.DriverID) ([]string, error) {
 
-	inst, err := i.PM.ListInstalledPackages(ctx)
+	inst, err := i.PM.ListInstalledPackages()
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to list installed packages: %w", err)
 	}
@@ -171,7 +170,7 @@ func (i *NvidiaProvider) Remove(ctx context.Context, drivers []api.DriverID) ([]
 	return pkgs, nil
 }
 
-func (i *NvidiaProvider) DetectHardware(ctx context.Context) (bool, error) {
+func (i *NvidiaProvider) DetectHardware() (bool, error) {
 	detector := newAutoDetector()
-	return detector.Detect(ctx)
+	return detector.Detect()
 }

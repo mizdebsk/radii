@@ -60,7 +60,8 @@ func TestRunCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			err := RunCommand(ctx, tt.command, tt.args)
+			ce := NewExecutor(ctx)
+			err := ce.Run(tt.command, tt.args)
 			if (err != nil) != tt.expectErr {
 				t.Errorf("Expected error: %v, but got: %v", tt.expectErr, err)
 			}
@@ -116,7 +117,8 @@ func TestRunCommandCapture(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			output, err := RunCommandCapture(ctx, tt.command, tt.args...)
+			ce := NewExecutor(ctx)
+			output, err := ce.RunCapture(tt.command, tt.args...)
 
 			if (err != nil) != tt.expectErr {
 				t.Errorf("Expected error: %v, but got: %v", tt.expectErr, err)

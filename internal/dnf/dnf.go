@@ -14,22 +14,24 @@ import (
 const defaultDNFBinary = "dnf"
 
 type pkgMgr struct {
-	Bin string
+	bin  string
+	exec exec.Executor
 }
 
 var _ api.PackageManager = (*pkgMgr)(nil)
 
-func New() api.PackageManager {
+func New(executor exec.Executor) api.PackageManager {
 	return &pkgMgr{
-		Bin: defaultDNFBinary,
+		bin:  defaultDNFBinary,
+		exec: executor,
 	}
 }
 
 var availableCache = cache.Cache[[]api.PackageInfo]{}
 var installedCache = cache.Cache[[]api.PackageInfo]{}
 
-func (pm *pkgMgr) ListAvailablePackages(ctx context.Context) ([]api.PackageInfo, error) {
-	return availableCache.Get(ctx, func(ctx context.Context) ([]api.PackageInfo, error) {
+func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
+	return availableCache.Get(nil, func(ctx context.Context) ([]api.PackageInfo, error) {
 		tags := []string{"name", "epoch", "version", "release", "arch", "sourcerpm", "repoid"}
 		// QQQ and YYY are there to make filtering spurious lines easier.
 		format := "QQQ"
@@ -39,7 +41,7 @@ func (pm *pkgMgr) ListAvailablePackages(ctx context.Context) ([]api.PackageInfo,
 		// Trailing NL is not required with DNF 4, but will be required with DNF 5.
 		// With DNF 4 it will result in empty lines, but they are ignored anyway.
 		format += "|YYY\n"
-		lines, err := exec.RunCommandCapture(ctx, pm.Bin, []string{"-q", "repoquery", "--qf", format}...)
+		lines, err := pm.exec.RunCapture(pm.bin, []string{"-q", "repoquery", "--qf", format}...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list available packages: %w", err)
 		}
@@ -47,15 +49,15 @@ func (pm *pkgMgr) ListAvailablePackages(ctx context.Context) ([]api.PackageInfo,
 	})
 }
 
-func (pm *pkgMgr) ListInstalledPackages(ctx context.Context) ([]api.PackageInfo, error) {
-	return installedCache.Get(ctx, func(ctx context.Context) ([]api.PackageInfo, error) {
+func (pm *pkgMgr) ListInstalledPackages() ([]api.PackageInfo, error) {
+	return installedCache.Get(nil, func(ctx context.Context) ([]api.PackageInfo, error) {
 		tags := []string{"NAME", "EPOCH", "VERSION", "RELEASE", "ARCH", "SOURCERPM"}
 		format := "QQQ"
 		for _, field := range tags {
 			format += "|%|" + field + "?{%{" + field + "}}|"
 		}
 		format += "||YYY\n"
-		lines, err := exec.RunCommandCapture(ctx, "rpm", []string{"-qa", "--qf", format}...)
+		lines, err := pm.exec.RunCapture("rpm", []string{"-qa", "--qf", format}...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list installed packages: %w", err)
 		}
@@ -103,11 +105,11 @@ func parseSourceName(sourceRpm string) string {
 	return parts[0]
 }
 
-func (pm *pkgMgr) Install(ctx context.Context, packages []string, opts api.InstallOptions) error {
+func (pm *pkgMgr) Install(packages []string, opts api.InstallOptions) error {
 	if len(packages) != 0 {
 		log.Logf("installing packages: %v", packages)
 		if !opts.DryRun {
-			return exec.RunCommand(ctx, pm.Bin, append([]string{"install"}, packages...))
+			return pm.exec.Run(pm.bin, append([]string{"install"}, packages...))
 		}
 	} else {
 		log.Warnf("no packages to install")
@@ -115,11 +117,11 @@ func (pm *pkgMgr) Install(ctx context.Context, packages []string, opts api.Insta
 	return nil
 }
 
-func (pm *pkgMgr) Remove(ctx context.Context, packages []string, opts api.RemoveOptions) error {
+func (pm *pkgMgr) Remove(packages []string, opts api.RemoveOptions) error {
 	if len(packages) != 0 {
 		log.Logf("removing packages: %v", packages)
 		if !opts.DryRun {
-			return exec.RunCommand(ctx, pm.Bin, append([]string{"remove"}, packages...))
+			return pm.exec.Run(pm.bin, append([]string{"remove"}, packages...))
 		}
 	} else {
 		log.Warnf("no packages to remove")

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 )
 
@@ -23,8 +22,8 @@ func (p PackageInfo) NEVRA() string {
 }
 
 type PackageManager interface {
-	ListAvailablePackages(ctx context.Context) ([]PackageInfo, error)
-	ListInstalledPackages(ctx context.Context) ([]PackageInfo, error)
-	Install(ctx context.Context, packages []string, opts InstallOptions) error
-	Remove(ctx context.Context, packages []string, opts RemoveOptions) error
+	ListAvailablePackages() ([]PackageInfo, error)
+	ListInstalledPackages() ([]PackageInfo, error)
+	Install(packages []string, opts InstallOptions) error
+	Remove(packages []string, opts RemoveOptions) error
 }

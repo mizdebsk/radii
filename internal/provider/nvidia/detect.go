@@ -1,7 +1,6 @@
 package nvidia
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -34,7 +33,7 @@ func newAutoDetector() autoDetector {
 	}
 }
 
-func (d *autoDetector) Detect(ctx context.Context) (bool, error) {
+func (d *autoDetector) Detect() (bool, error) {
 	compatible, err := d.loadCompatibleDevices()
 	if err != nil {
 		return false, err
@@ -43,7 +42,7 @@ func (d *autoDetector) Detect(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	found, err := d.scanModaliases(ctx, compatible)
+	found, err := d.scanModaliases(compatible)
 	if err != nil {
 		return false, err
 	}
@@ -110,7 +109,7 @@ func normalizeDevID(id string) string {
 	return id
 }
 
-func (d *autoDetector) scanModaliases(ctx context.Context, compatible map[string]string) (bool, error) {
+func (d *autoDetector) scanModaliases(compatible map[string]string) (bool, error) {
 	found := false
 
 	walkFn := func(path string, de fs.DirEntry, err error) error {

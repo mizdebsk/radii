@@ -1,7 +1,6 @@
 package amd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
@@ -27,15 +26,15 @@ func NewProvider(pm api.PackageManager) *AmdProvider {
 	}
 }
 
-func (i *AmdProvider) Install(ctx context.Context, drivers []api.DriverID) ([]string, error) {
+func (i *AmdProvider) Install(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
 	return []string{"kmod-amdgpu"}, nil
 }
 
-func (i *AmdProvider) ListInstalled(ctx context.Context) ([]api.DriverID, error) {
-	all, err := i.PM.ListInstalledPackages(ctx)
+func (i *AmdProvider) ListInstalled() ([]api.DriverID, error) {
+	all, err := i.PM.ListInstalledPackages()
 	if err != nil {
 		return []api.DriverID{}, err
 	}
@@ -56,15 +55,15 @@ func (i *AmdProvider) ListInstalled(ctx context.Context) ([]api.DriverID, error)
 	}}, nil
 }
 
-func (i *AmdProvider) Remove(ctx context.Context, drivers []api.DriverID) ([]string, error) {
+func (i *AmdProvider) Remove(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
 	return []string{"kmod-amdgpu"}, nil
 }
 
-func (i *AmdProvider) ListAvailable(ctx context.Context) ([]api.DriverID, error) {
-	all, err := i.PM.ListAvailablePackages(ctx)
+func (i *AmdProvider) ListAvailable() ([]api.DriverID, error) {
+	all, err := i.PM.ListAvailablePackages()
 	if err != nil {
 		return []api.DriverID{}, err
 	}
@@ -84,6 +83,6 @@ func (i *AmdProvider) ListAvailable(ctx context.Context) ([]api.DriverID, error)
 	}}, nil
 }
 
-func (i *AmdProvider) DetectHardware(ctx context.Context) (bool, error) {
+func (i *AmdProvider) DetectHardware() (bool, error) {
 	return false, fmt.Errorf("hardware detection for %s is not implemented", i.GetName())
 }

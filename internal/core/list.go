@@ -1,21 +1,20 @@
 package core
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-func List(ctx context.Context, deps api.CoreDeps, listInst, listAvail, hwdetect bool) ([]api.DriverStatus, error) {
+func List(deps api.CoreDeps, listInst, listAvail, hwdetect bool) ([]api.DriverStatus, error) {
 	var result []api.DriverStatus
 
 	if listAvail {
 		if deps.RepoVerifier == nil {
 			return result, fmt.Errorf("no RepositoryManager provided")
 		}
-		if err := deps.RepoVerifier.EnsureRepositoriesEnabled(ctx); err != nil {
+		if err := deps.RepoVerifier.EnsureRepositoriesEnabled(); err != nil {
 			return result, fmt.Errorf("failed to verify/enable repositories: %w", err)
 		}
 	}
@@ -24,7 +23,7 @@ func List(ctx context.Context, deps api.CoreDeps, listInst, listAvail, hwdetect 
 		var compat bool
 		if hwdetect {
 			var err error
-			compat, err = provider.DetectHardware(ctx)
+			compat, err = provider.DetectHardware()
 			if err != nil {
 				log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
 			}
@@ -32,7 +31,7 @@ func List(ctx context.Context, deps api.CoreDeps, listInst, listAvail, hwdetect 
 		var installed []api.DriverID
 		if listInst {
 			var err error
-			installed, err = provider.ListInstalled(ctx)
+			installed, err = provider.ListInstalled()
 			if err != nil {
 				return result, fmt.Errorf("failed to check installed %s drivers: %w", provider.GetName(), err)
 			}
@@ -45,7 +44,7 @@ func List(ctx context.Context, deps api.CoreDeps, listInst, listAvail, hwdetect 
 		var available []api.DriverID
 		if listAvail {
 			var err error
-			available, err = provider.ListAvailable(ctx)
+			available, err = provider.ListAvailable()
 			if err != nil {
 				return result, fmt.Errorf("failed to check available %s drivers: %w", provider.GetName(), err)
 			}

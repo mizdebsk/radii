@@ -1,7 +1,6 @@
 package nvidia
 
 import (
-	"context"
 	"testing"
 )
 
@@ -171,8 +170,7 @@ func TestDetect_WithA100SysfsAndHwdata(t *testing.T) {
 	d := newAutoDetector()
 	d.compatibleGPUs = "testdata/hwdata.json"
 	d.modaliasRoot = "testdata/sysfs-A100-PCIE-40GB"
-	ctx := context.Background()
-	found, err := d.Detect(ctx)
+	found, err := d.Detect()
 	if err != nil {
 		t.Fatalf("Detect() error = %v", err)
 	}

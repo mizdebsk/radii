@@ -1,5 +1,7 @@
 package exec
 
+//go:generate mockgen -source=exec.go -destination=exec_mock.go -package=exec
+
 import (
 	"bufio"
 	"context"

@@ -14,28 +14,23 @@ func TestRunCommand(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name:      "True",
-			command:   "true",
-			args:      []string{},
-			expectErr: false,
+			name:    "True",
+			command: "true",
 		},
 		{
 			name:      "False",
 			command:   "false",
-			args:      []string{},
 			expectErr: true,
 		},
 		{
 			name:      "CommandNotFound",
 			command:   "blah-blah-blah-this-command-does-not-exist",
-			args:      []string{},
 			expectErr: true,
 		},
 		{
-			name:      "ShellExit0",
-			command:   "sh",
-			args:      []string{"-c", "exit 0"},
-			expectErr: false,
+			name:    "ShellExit0",
+			command: "sh",
+			args:    []string{"-c", "exit 0"},
 		},
 		{
 			name:      "ShellExit42",
@@ -81,28 +76,22 @@ func TestRunCommandCapture(t *testing.T) {
 			name:      "EchoSingle",
 			command:   "echo",
 			args:      []string{"\t\r\fHello, World!  "},
-			expectErr: false,
 			expectOut: []string{"\t\r\fHello, World!  "},
 		},
 		{
 			name:      "EchoMultiple",
 			command:   "sh",
 			args:      []string{"-c", "echo line1; echo line2; echo line3"},
-			expectErr: false,
 			expectOut: []string{"line1", "line2", "line3"},
 		},
 		{
 			name:      "CommandNotFound",
 			command:   "blah-blah-blah-this-command-does-not-exist",
-			args:      []string{},
 			expectErr: true,
-			expectOut: nil,
 		},
 		{
 			name:      "EmptyOutput",
 			command:   "true",
-			args:      []string{},
-			expectErr: false,
 			expectOut: []string{},
 		},
 		{
@@ -110,7 +99,6 @@ func TestRunCommandCapture(t *testing.T) {
 			command:   "sh",
 			args:      []string{"-c", "echo 'BOOM!' && exit 1"},
 			expectErr: true,
-			expectOut: nil,
 		},
 	}
 

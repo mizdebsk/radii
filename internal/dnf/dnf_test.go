@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/mocks"
 )

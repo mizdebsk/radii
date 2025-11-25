@@ -11,21 +11,25 @@ import (
 )
 
 const (
-	redhatRepoPath = "/etc/yum.repos.d/redhat.repo"
-	rhsmExecPath   = "/usr/sbin/subscription-manager"
+	defaultRedhatRepoPath = "/etc/yum.repos.d/redhat.repo"
+	defaultRhsmExecPath   = "/usr/sbin/subscription-manager"
 )
 
 type repoMgr struct {
-	systemInfo sysinfo.SysInfo
-	executor   api.Executor
+	systemInfo     sysinfo.SysInfo
+	executor       api.Executor
+	redhatRepoPath string
+	rhsmExecPath   string
 }
 
 var _ api.RepositoryManager = (*repoMgr)(nil)
 
 func NewRepositoryManager(executor api.Executor, systemInfo sysinfo.SysInfo) api.RepositoryManager {
 	return &repoMgr{
-		systemInfo: systemInfo,
-		executor:   executor,
+		systemInfo:     systemInfo,
+		executor:       executor,
+		redhatRepoPath: defaultRedhatRepoPath,
+		rhsmExecPath:   defaultRhsmExecPath,
 	}
 }
 
@@ -48,12 +52,12 @@ func (rm *repoMgr) EnsureRepositoriesEnabled() error {
 }
 
 func (rm *repoMgr) subscriptionManagerPresent() bool {
-	stat, err := os.Stat(rhsmExecPath)
+	stat, err := os.Stat(rm.rhsmExecPath)
 	if err != nil || stat == nil {
-		log.Debugf("stat %s failed: %v", rhsmExecPath, err)
+		log.Debugf("stat %s failed: %v", rm.rhsmExecPath, err)
 		return false
 	}
-	log.Debugf("stat %s: isRegular=%v mode=0%o", rhsmExecPath, stat.Mode().IsRegular(), stat.Mode().Perm())
+	log.Debugf("stat %s: isRegular=%v mode=0%o", rm.rhsmExecPath, stat.Mode().IsRegular(), stat.Mode().Perm())
 	return stat.Mode().IsRegular() && stat.Mode().Perm()&0111 != 0
 }
 
@@ -64,7 +68,7 @@ func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	for _, channel := range channels {
 		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
 		log.Logf("mapped RHEL channel %s to repo ID %s", channel, repo)
-		if !repoEnabled(redhatRepoPath, repo) {
+		if !repoEnabled(rm.redhatRepoPath, repo) {
 			log.Infof("enabling channel %s, repository %s", channel, repo)
 			args = append(args, "--enable", repo)
 			allEnabled = false
@@ -79,7 +83,7 @@ func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	}
 
 	log.Logf("running subscription-manager to enable repositories")
-	err := rm.executor.Run(rhsmExecPath, args)
+	err := rm.executor.Run(rm.rhsmExecPath, args)
 	if err != nil {
 		return fmt.Errorf("failed to enable repositories: %w", err)
 	}

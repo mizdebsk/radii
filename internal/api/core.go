@@ -9,16 +9,6 @@ type DriverID struct {
 	Version    string
 }
 
-type Provider interface {
-	GetID() string
-	GetName() string
-	Install(drivers []DriverID) ([]string, error)
-	Remove(drivers []DriverID) ([]string, error)
-	ListAvailable() ([]DriverID, error)
-	ListInstalled() ([]DriverID, error)
-	DetectHardware() (bool, error)
-}
-
 type CoreDeps struct {
 	PackageManager    PackageManager
 	RepositoryManager RepositoryManager

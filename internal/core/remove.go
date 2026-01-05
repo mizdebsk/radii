@@ -7,7 +7,7 @@ import (
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-func RemoveSpecific(deps api.CoreDeps, drivers []string, dryRun bool) error {
+func RemoveSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun bool) error {
 	var toRemove []api.DriverID
 
 	if len(drivers) == 0 {
@@ -31,10 +31,10 @@ outer:
 		}
 		return fmt.Errorf("driver %s version %s is NOT installed", provider.GetName(), driver.Version)
 	}
-	return doRemove(deps, toRemove, dryRun)
+	return doRemove(deps, toRemove, batchMode, dryRun)
 }
 
-func RemoveAll(deps api.CoreDeps, dryRun bool) error {
+func RemoveAll(deps api.CoreDeps, batchMode, dryRun bool) error {
 	var toRemove []api.DriverID
 
 	for _, provider := range deps.Providers {
@@ -47,10 +47,10 @@ func RemoveAll(deps api.CoreDeps, dryRun bool) error {
 	if len(toRemove) == 0 {
 		return fmt.Errorf("not found any installed drivers to remove")
 	}
-	return doRemove(deps, toRemove, dryRun)
+	return doRemove(deps, toRemove, batchMode, dryRun)
 }
 
-func doRemove(deps api.CoreDeps, toRemove []api.DriverID, dryRun bool) error {
+func doRemove(deps api.CoreDeps, toRemove []api.DriverID, batchMode, dryRun bool) error {
 	var allPkgs []string
 	for _, provider := range deps.Providers {
 		provID := provider.GetID()
@@ -74,7 +74,7 @@ func doRemove(deps api.CoreDeps, toRemove []api.DriverID, dryRun bool) error {
 	for _, pkg := range allPkgs {
 		log.Logf("package will be removed: %v", pkg)
 	}
-	if err := deps.PackageManager.Remove(allPkgs, dryRun, false); err != nil {
+	if err := deps.PackageManager.Remove(allPkgs, dryRun, batchMode); err != nil {
 		return fmt.Errorf("failed to remove pacakges: %w", err)
 	}
 	return nil

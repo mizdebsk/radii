@@ -7,11 +7,7 @@ import (
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-func InstallSpecific(deps api.CoreDeps, drivers []string, dryRun, force bool) error {
-
-	log.Debugf("options: dryRun=%v force=%v", dryRun, force)
-	log.Debugf("arguments: %v", drivers)
-
+func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, force bool) error {
 	if len(drivers) == 0 {
 		return fmt.Errorf("not specified what to install")
 	}
@@ -49,13 +45,10 @@ outer:
 		return fmt.Errorf("%s driver version %s is NOT available", provider.GetName(), driver.Version)
 	}
 
-	return doInstall(deps, toInstall, dryRun)
+	return doInstall(deps, toInstall, batchMode, dryRun)
 }
 
-func InstallAutoDetect(deps api.CoreDeps, dryRun bool) error {
-
-	log.Debugf("options: dryRun=%v", dryRun)
-
+func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 	var toInstall []api.DriverID
 
 	hardwareDetected := false
@@ -84,10 +77,10 @@ func InstallAutoDetect(deps api.CoreDeps, dryRun bool) error {
 		return fmt.Errorf("no drivers available for detected hardware")
 	}
 
-	return doInstall(deps, toInstall, dryRun)
+	return doInstall(deps, toInstall, batchMode, dryRun)
 }
 
-func doInstall(deps api.CoreDeps, toInstall []api.DriverID, dryRun bool) error {
+func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool) error {
 	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
 		return fmt.Errorf("failed to verify/enable repositories: %w", err)
 	}
@@ -115,7 +108,7 @@ func doInstall(deps api.CoreDeps, toInstall []api.DriverID, dryRun bool) error {
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if err := deps.PackageManager.Install(allPkgs, dryRun, false); err != nil {
+	if err := deps.PackageManager.Install(allPkgs, dryRun, batchMode); err != nil {
 		return fmt.Errorf("failed to install pacakges: %w", err)
 	}
 	return nil

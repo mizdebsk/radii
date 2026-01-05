@@ -67,6 +67,7 @@ func printVersion(version string) {
 func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 	var (
 		autoDetect bool
+		batchMode  bool
 		dryRun     bool
 		force      bool
 	)
@@ -84,17 +85,18 @@ func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 				if force {
 					return fmt.Errorf("both --auto-detect and --force were specified")
 				}
-				return core.InstallAutoDetect(deps, dryRun)
+				return core.InstallAutoDetect(deps, batchMode, dryRun)
 			} else {
 				if len(args) == 0 {
 					return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
 				}
-				return core.InstallSpecific(deps, args, dryRun, force)
+				return core.InstallSpecific(deps, args, batchMode, dryRun, force)
 			}
 		},
 	}
 
 	cmd.Flags().BoolVar(&autoDetect, "auto-detect", false, "Auto-detect drivers to install")
+	cmd.Flags().BoolVar(&batchMode, "batch", false, "Batch mode (non-interactive)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
 	cmd.Flags().BoolVar(&force, "force", false, "Force install (ignore checks)")
 
@@ -103,8 +105,9 @@ func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 
 func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
 	var (
-		dryRun bool
-		all    bool
+		all       bool
+		batchMode bool
+		dryRun    bool
 	)
 
 	cmd := &cobra.Command{
@@ -117,18 +120,19 @@ func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
 				if len(args) > 0 {
 					return fmt.Errorf("both --all and specific drivers given")
 				}
-				return core.RemoveAll(deps, dryRun)
+				return core.RemoveAll(deps, batchMode, dryRun)
 			} else {
 				if len(args) == 0 {
 					return fmt.Errorf("not specified what to remove (use --all or provide drivers)")
 				}
-				return core.RemoveSpecific(deps, args, dryRun)
+				return core.RemoveSpecific(deps, args, batchMode, dryRun)
 			}
 		},
 	}
 
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
 	cmd.Flags().BoolVar(&all, "all", false, "Remove all installed drivers")
+	cmd.Flags().BoolVar(&batchMode, "batch", false, "Batch mode (non-interactive)")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
 
 	return cmd
 }

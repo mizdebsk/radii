@@ -54,10 +54,14 @@ func selectPackagesByNameVersion(all []api.PackageInfo, name, version string, la
 
 func packageSetVersioned(all []api.PackageInfo, version string, latest bool) []string {
 	var pkgs []string
-	driverPkgs := selectPackagesByNameVersion(all, "nvidia-driver", version, latest)
-	cudaPkgs := selectPackagesByNameVersion(all, "nvidia-driver-cuda", version, latest)
-	pkgs = append(pkgs, driverPkgs...)
-	pkgs = append(pkgs, cudaPkgs...)
+	names := []string{
+		"nvidia-driver",
+		"nvidia-driver-cuda",
+	}
+	for _, name := range names {
+		selectedPkgs := selectPackagesByNameVersion(all, name, version, latest)
+		pkgs = append(pkgs, selectedPkgs...)
+	}
 	return pkgs
 }
 func packageSetStatic() []string {

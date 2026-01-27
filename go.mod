@@ -1,4 +1,4 @@
-module github.com/mizdebsk/rhel-drivers
+module github.com/mizdebsk/radii
 
 go 1.24.9
 

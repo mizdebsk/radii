@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/cache"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/cache"
+	"github.com/mizdebsk/radii/internal/log"
 )
 
 const defaultDNFBinary = "dnf"

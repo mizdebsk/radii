@@ -1,7 +1,7 @@
-MODULE      := github.com/mizdebsk/rhel-drivers
-CMD_DIR     := ./cmd/rhel-drivers
+MODULE      := github.com/mizdebsk/radii
+CMD_DIR     := ./cmd/radii
 BIN_DIR     := dist/bin
-BIN_NAME    := rhel-drivers
+BIN_NAME    := radii
 
 VERSION     := $(shell git describe --tags --dirty --always 2>/dev/null || echo "dev")
 

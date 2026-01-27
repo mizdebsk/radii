@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	api "github.com/mizdebsk/rhel-drivers/internal/api"
+	api "github.com/mizdebsk/radii/internal/api"
 )
 
 // MockPackageManager is a mock of PackageManager interface.

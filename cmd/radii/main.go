@@ -4,17 +4,17 @@ import (
 	"context"
 	"os"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/cli"
-	"github.com/mizdebsk/rhel-drivers/internal/dnf"
-	"github.com/mizdebsk/rhel-drivers/internal/exec"
-	"github.com/mizdebsk/rhel-drivers/internal/provider/amd"
-	"github.com/mizdebsk/rhel-drivers/internal/provider/nvidia"
-	"github.com/mizdebsk/rhel-drivers/internal/rhsm"
-	"github.com/mizdebsk/rhel-drivers/internal/sysinfo"
+	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/cli"
+	"github.com/mizdebsk/radii/internal/dnf"
+	"github.com/mizdebsk/radii/internal/exec"
+	"github.com/mizdebsk/radii/internal/provider/amd"
+	"github.com/mizdebsk/radii/internal/provider/nvidia"
+	"github.com/mizdebsk/radii/internal/rhsm"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
-// set at build time via -ldflags, eg: go build -ldflags="-X main.version=1.0.0" ./cmd/rhel-drivers
+// set at build time via -ldflags, eg: go build -ldflags="-X main.version=1.0.0" ./cmd/radii
 var version = "dev"
 
 func main() {

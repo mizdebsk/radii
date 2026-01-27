@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/mizdebsk/rhel-drivers/internal/mocks"
-	"github.com/mizdebsk/rhel-drivers/internal/sysinfo"
+	"github.com/mizdebsk/radii/internal/mocks"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 func TestRhsm(t *testing.T) {

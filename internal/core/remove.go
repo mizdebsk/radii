@@ -3,8 +3,8 @@ package core
 import (
 	"fmt"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/log"
 )
 
 func RemoveSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun bool) error {

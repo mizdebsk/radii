@@ -1,13 +1,13 @@
-[![build status](https://img.shields.io/github/actions/workflow/status/mizdebsk/rhel-drivers/ci.yml?branch=main)](https://github.com/mizdebsk/rhel-drivers/actions/workflows/ci.yml?query=branch%3Amain)
-[![License](https://img.shields.io/github/license/mizdebsk/rhel-drivers.svg?label=License)](https://www.gnu.org/licenses/gpl-3.0-standalone.html)
+[![build status](https://img.shields.io/github/actions/workflow/status/mizdebsk/radii/ci.yml?branch=main)](https://github.com/mizdebsk/radii/actions/workflows/ci.yml?query=branch%3Amain)
+[![License](https://img.shields.io/github/license/mizdebsk/radii.svg?label=License)](https://www.gnu.org/licenses/gpl-3.0-standalone.html)
 
 
-rhel-drivers
-============
+radii
+=====
 
 Hardware driver manager for RHEL
 
-The rhel-drivers tool is a command-line utility that provides a
+The radii tool is a command-line utility that provides a
 consistent interface for installing and maintaining third-party
 AI-accelerator and GPU driver stacks on Red Hat Enterprise Linux
 (RHEL).  It detects compatible accelerator hardware, enables the

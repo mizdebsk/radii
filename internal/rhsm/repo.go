@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/radii/internal/log"
 )
 
 func repoEnabled(path, repoID string) bool {

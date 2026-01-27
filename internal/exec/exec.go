@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
+	"github.com/mizdebsk/radii/internal/api"
 )
 
 type cmdExec struct {

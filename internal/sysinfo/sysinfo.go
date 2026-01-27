@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/radii/internal/log"
 )
 
 const osReleasePath = "/etc/os-release"

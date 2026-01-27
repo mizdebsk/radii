@@ -9,11 +9,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/radii/internal/log"
 )
 
 const (
-	defaultCompatibleGPUsPath = "/usr/share/rhel-drivers/nvidia/supported-gpus.json"
+	defaultCompatibleGPUsPath = "/usr/share/radii/nvidia/supported-gpus.json"
 	defaultModaliasRoot       = "/sys/devices"
 
 	modaliasBus     = "pci"

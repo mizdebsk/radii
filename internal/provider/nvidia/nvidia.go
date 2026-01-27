@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/rpmver"
+	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/rpmver"
 )
 
 type prov struct {

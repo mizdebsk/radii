@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	api "github.com/mizdebsk/rhel-drivers/internal/api"
+	api "github.com/mizdebsk/radii/internal/api"
 )
 
 // MockProvider is a mock of Provider interface.

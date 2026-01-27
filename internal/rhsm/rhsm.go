@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
-	"github.com/mizdebsk/rhel-drivers/internal/sysinfo"
+	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/log"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 const (

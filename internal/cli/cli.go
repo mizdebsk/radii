@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/core"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/core"
+	"github.com/mizdebsk/radii/internal/log"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 
 func NewRootCmd(deps api.CoreDeps, version string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rhel-drivers",
+		Use:   "radii",
 		Short: "Install and manage RHEL hardware drivers",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if flagVersion {
@@ -61,7 +61,7 @@ func printVersion(version string) {
 	if v == "" {
 		v = "unknown"
 	}
-	fmt.Println("rhel-drivers version", v)
+	fmt.Println("radii version", v)
 }
 
 func newInstallCmd(deps api.CoreDeps) *cobra.Command {

@@ -17,6 +17,13 @@ multi-component driver stacks end-to-end and integrates with the
 standard dnf workflow so that installed drivers are updated through
 normal system package management.
 
+The name "radii" comes from RDI (RHEL Drivers Installation), the core
+purpose of the tool.  It echoes the acronym while also being a real
+word.  Radii is the plural of the Latin radius, which originally meant
+a ray, rod, or spoke.  The plural form reflects the many pieces that
+make up a driver stack.  In anatomy, the radii are the bones that let
+your hands move, serving as a simple metaphor for enabling hardware to
+work.
 
 Copying
 -------

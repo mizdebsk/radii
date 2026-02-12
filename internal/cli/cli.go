@@ -1,70 +1,67 @@
 package cli
 
 import (
+	"flag"
 	"fmt"
+	"io"
 	"strings"
-
-	"github.com/spf13/cobra"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/core"
 	"github.com/mizdebsk/radii/internal/log"
 )
 
-var (
-	flagVerbose bool
-	flagQuiet   bool
-	flagDebug   bool
-	flagVersion bool
-)
+var progName = ""
 
-func NewRootCmd(deps api.CoreDeps, version string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "radii",
-		Short: "Install and manage RHEL hardware drivers",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if flagVersion {
-				printVersion(version)
-				return nil
-			}
-			return cmd.Help()
-		},
+func Execute(argv []string, deps api.CoreDeps, version string) error {
+	progName = argv[0]
+	args := argv[1:]
+	if helpRequested(args) {
+		printRootUsage()
+		return nil
 	}
 
-	cmd.SetHelpCommand(&cobra.Command{})
-	cmd.SilenceUsage = true
-	cmd.SilenceErrors = false
-	cmd.CompletionOptions.DisableDefaultCmd = true
+	var showVersion bool
 
-	cmd.PersistentFlags().BoolVar(&flagVerbose, "verbose", false, "Increase verbosity")
-	cmd.PersistentFlags().BoolVar(&flagQuiet, "quiet", false, "Suppress non-error output")
-	cmd.PersistentFlags().BoolVar(&flagDebug, "debug", false, "Activate debug mode")
-	cmd.PersistentFlags().BoolVar(&flagVersion, "version", false, "Show version and exit")
-
-	cobra.OnInitialize(func() {
-		log.Quiet = flagQuiet
-		log.Verbose = flagVerbose
-		log.Debug = flagDebug
-	})
-
-	cmd.AddCommand(
-		newInstallCmd(deps),
-		newRemoveCmd(deps),
-		newListCmd(deps),
-	)
-
-	return cmd
-}
-
-func printVersion(version string) {
-	v := strings.TrimSpace(version)
-	if v == "" {
-		v = "unknown"
+	fs := flag.NewFlagSet(progName, flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	fs.Usage = func() {}
+	fs.BoolVar(&log.Verbose, "verbose", false, "")
+	fs.BoolVar(&log.Quiet, "quiet", false, "")
+	fs.BoolVar(&log.Debug, "debug", false, "")
+	fs.BoolVar(&showVersion, "version", false, "")
+	if err := fs.Parse(args); err != nil {
+		return err
 	}
-	fmt.Println("radii version", v)
+
+	if showVersion {
+		printVersion(progName, version)
+		return nil
+	}
+
+	rest := fs.Args()
+	if len(rest) == 0 {
+		return fmt.Errorf("no command specified")
+	}
+
+	switch rest[0] {
+	case "install", "in":
+		return runInstall(rest[1:], deps)
+	case "remove", "rm":
+		return runRemove(rest[1:], deps)
+	case "list", "ls":
+		return runList(rest[1:], deps)
+	default:
+		return fmt.Errorf("unknown command: %s", rest[0])
+	}
 }
 
-func newInstallCmd(deps api.CoreDeps) *cobra.Command {
+func runInstall(args []string, deps api.CoreDeps) error {
+	if helpRequested(args) {
+		printInstallUsage()
+		return nil
+	}
+
 	var (
 		autoDetect bool
 		batchMode  bool
@@ -72,126 +69,153 @@ func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 		force      bool
 	)
 
-	cmd := &cobra.Command{
-		Use:     "install [OPTIONS] [DRIVER...]",
-		Short:   "Install hardware drivers",
-		Aliases: []string{"in"},
-		Args:    cobra.ArbitraryArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if autoDetect {
-				if len(args) > 0 {
-					return fmt.Errorf("both --auto-detect and specific drivers given")
-				}
-				if force {
-					return fmt.Errorf("both --auto-detect and --force were specified")
-				}
-				return core.InstallAutoDetect(deps, batchMode, dryRun)
-			} else {
-				if len(args) == 0 {
-					return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
-				}
-				return core.InstallSpecific(deps, args, batchMode, dryRun, force)
-			}
-		},
+	fs := flag.NewFlagSet("install", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	fs.BoolVar(&autoDetect, "auto-detect", false, "")
+	fs.BoolVar(&batchMode, "batch", false, "")
+	fs.BoolVar(&dryRun, "dry-run", false, "")
+	fs.BoolVar(&force, "force", false, "")
+	if err := fs.Parse(args); err != nil {
+		return err
 	}
 
-	cmd.Flags().BoolVar(&autoDetect, "auto-detect", false, "Auto-detect drivers to install")
-	cmd.Flags().BoolVar(&batchMode, "batch", false, "Batch mode (non-interactive)")
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
-	cmd.Flags().BoolVar(&force, "force", false, "Force install (ignore checks)")
+	drivers := fs.Args()
 
-	return cmd
+	if autoDetect {
+		if len(drivers) > 0 {
+			return fmt.Errorf("both --auto-detect and specific drivers given")
+		}
+		if force {
+			return fmt.Errorf("both --auto-detect and --force were specified")
+		}
+		return core.InstallAutoDetect(deps, batchMode, dryRun)
+	}
+
+	if len(drivers) == 0 {
+		return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
+	}
+
+	return core.InstallSpecific(deps, drivers, batchMode, dryRun, force)
 }
 
-func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
+func runRemove(args []string, deps api.CoreDeps) error {
+	if helpRequested(args) {
+		printRemoveUsage()
+		return nil
+	}
+
 	var (
 		all       bool
 		batchMode bool
 		dryRun    bool
 	)
 
-	cmd := &cobra.Command{
-		Use:     "remove [OPTIONS] [DRIVER...]",
-		Short:   "Remove hardware drivers",
-		Aliases: []string{"rm"},
-		Args:    cobra.ArbitraryArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if all {
-				if len(args) > 0 {
-					return fmt.Errorf("both --all and specific drivers given")
-				}
-				return core.RemoveAll(deps, batchMode, dryRun)
-			} else {
-				if len(args) == 0 {
-					return fmt.Errorf("not specified what to remove (use --all or provide drivers)")
-				}
-				return core.RemoveSpecific(deps, args, batchMode, dryRun)
-			}
-		},
+	fs := flag.NewFlagSet("remove", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	fs.BoolVar(&all, "all", false, "")
+	fs.BoolVar(&batchMode, "batch", false, "")
+	fs.BoolVar(&dryRun, "dry-run", false, "")
+	if err := fs.Parse(args); err != nil {
+		return err
 	}
 
-	cmd.Flags().BoolVar(&all, "all", false, "Remove all installed drivers")
-	cmd.Flags().BoolVar(&batchMode, "batch", false, "Batch mode (non-interactive)")
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
+	drivers := fs.Args()
 
-	return cmd
+	if all {
+		if len(drivers) > 0 {
+			return fmt.Errorf("both --all and specific drivers given")
+		}
+		return core.RemoveAll(deps, batchMode, dryRun)
+	}
+
+	if len(drivers) == 0 {
+		return fmt.Errorf("not specified what to remove (use --all or provide drivers)")
+	}
+
+	return core.RemoveSpecific(deps, drivers, batchMode, dryRun)
 }
 
-func newListCmd(deps api.CoreDeps) *cobra.Command {
+func runList(args []string, deps api.CoreDeps) error {
+	if helpRequested(args) {
+		printListUsage()
+		return nil
+	}
+
 	var (
 		flagAvailable bool
 		flagInstalled bool
 	)
 
-	cmd := &cobra.Command{
-		Use:     "list [OPTIONS]",
-		Short:   "List drivers",
-		Aliases: []string{"ls"},
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if flagAvailable || (!flagAvailable && !flagInstalled) {
-				res, err := core.List(deps, true, true, true)
-				if err != nil {
-					return err
-				}
-				if len(res) > 0 {
-					fmt.Println("Available drivers:")
-					for _, dev := range res {
-						markInstalled := " "
-						if dev.Installed {
-							markInstalled = "*"
-						}
-						markAuto := " "
-						if dev.Compatible {
-							markAuto = ">"
-						}
-						fmt.Printf("%s%s %s:%s\n", markInstalled, markAuto, dev.ID.ProviderID, dev.ID.Version)
-					}
-				} else {
-					fmt.Println("Available drivers:\n  (none)")
-				}
-			}
-
-			if flagInstalled {
-				res, err := core.List(deps, true, false, false)
-				if err != nil {
-					return err
-				}
-				fmt.Print("Installed drivers:")
-				for _, dev := range res {
-					if dev.Installed {
-						fmt.Printf("\n%s:%s", dev.ID.ProviderID, dev.ID.Version)
-					}
-				}
-				fmt.Println()
-			}
-
-			return nil
-		},
+	fs := flag.NewFlagSet("list", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	fs.BoolVar(&flagAvailable, "available", false, "")
+	fs.BoolVar(&flagInstalled, "installed", false, "")
+	if err := fs.Parse(args); err != nil {
+		return err
 	}
 
-	cmd.Flags().BoolVar(&flagAvailable, "available", false, "List available drivers")
-	cmd.Flags().BoolVar(&flagInstalled, "installed", false, "List installed drivers")
+	if len(fs.Args()) != 0 {
+		return fmt.Errorf("list takes no arguments")
+	}
 
-	return cmd
+	if flagAvailable || (!flagAvailable && !flagInstalled) {
+		res, err := core.List(deps, true, true, true)
+		if err != nil {
+			return err
+		}
+
+		if len(res) > 0 {
+			fmt.Println("Available drivers:")
+			for _, dev := range res {
+				markInstalled := " "
+				if dev.Installed {
+					markInstalled = "*"
+				}
+				markAuto := " "
+				if dev.Compatible {
+					markAuto = ">"
+				}
+				fmt.Printf("%s%s %s:%s\n", markInstalled, markAuto, dev.ID.ProviderID, dev.ID.Version)
+			}
+		} else {
+			fmt.Println("Available drivers:\n  (none)")
+		}
+	}
+
+	if flagInstalled {
+		res, err := core.List(deps, true, false, false)
+		if err != nil {
+			return err
+		}
+
+		fmt.Print("Installed drivers:")
+		for _, dev := range res {
+			if dev.Installed {
+				fmt.Printf("\n%s:%s", dev.ID.ProviderID, dev.ID.Version)
+			}
+		}
+		fmt.Println()
+	}
+
+	return nil
+}
+
+func helpRequested(args []string) bool {
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "-") {
+			return false
+		}
+		if arg == "--help" {
+			return true
+		}
+	}
+	return false
+}
+
+func printVersion(progName, version string) {
+	v := strings.TrimSpace(version)
+	if v == "" {
+		v = "unknown"
+	}
+	fmt.Println(progName, "version", v)
 }

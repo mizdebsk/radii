@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/mizdebsk/radii/internal/api"
@@ -31,9 +32,8 @@ func main() {
 		Providers:         providers,
 	}
 
-	root := cli.NewRootCmd(deps, version)
-
-	if err := root.ExecuteContext(ctx); err != nil {
+	if err := cli.Execute(os.Args, deps, version); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 }

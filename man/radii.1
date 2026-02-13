@@ -1,0 +1,222 @@
+.Dd February 13, 2026
+.Dt RADII 1
+.Os
+.Sh NAME
+.Nm radii
+.Nd install and manage hardware driver stacks
+.Sh SYNOPSIS
+.Nm
+.Cm install
+.Fl -auto-detect
+.Nm
+.Cm install
+.Ar vendor Ns Oo : Ns Ar version Oc ...
+.Pp
+.Nm
+.Cm remove
+.Fl -all
+.Nm
+.Cm remove
+.Ar vendor Ns Oo : Ns Ar version Oc ...
+.Pp
+.Nm
+.Cm list
+.Op Fl -available
+.Op Fl -installed
+.Pp
+.Nm
+.Fl -help
+.Nm
+.Fl -version
+.Sh DESCRIPTION
+The
+.Nm
+utility installs, removes, and queries hardware driver stacks for GPUs
+and AI accelerators using packages available through the system’s
+configured software repositories.
+.Pp
+Rather than invoking vendor-provided installer scripts,
+.Nm
+relies entirely on repository-managed packages.
+This allows driver
+components to be installed, upgraded, and removed using the same
+mechanisms as the rest of the system, and ensures that driver updates
+follow normal package management workflows.
+.Pp
+Drivers may be supplied by the base distribution or by additional
+repositories configured by the administrator.
+For example, a system
+may use a hardware vendor repository alongside the distribution’s own
+repositories, and
+.Nm
+will select drivers from whichever sources are enabled.
+.Pp
+The simplest way to install drivers is:
+.Pp
+.Dl Nm Li install --auto-detect
+.Pp
+In this mode,
+.Nm
+attempts to detect accelerator hardware present in the system and
+installs the default driver stack for each detected device vendor.
+.Pp
+Hardware detection is performed on a best-effort basis.
+Because
+detection relies on available system information and known device
+mappings, it may fail to recognize some devices or may produce
+incomplete results in unusual configurations.
+.Pp
+Drivers may also be selected explicitly by specifying a vendor
+identifier.
+The
+.Fl -force
+option allows installation to proceed even if the detected hardware
+does not appear to match the requested driver.
+.Pp
+Each driver stack is selected by a vendor identifier with an optional
+version qualifier:
+.Bl -bullet
+.It
+.Ar vendor
+selects the default version defined by the repositories.
+The default
+is chosen to provide a stable, consistent selection and is not
+necessarily the newest available version.
+.It
+.Ar vendor : Ns Ar version
+selects the specified version of the driver stack.
+.It
+.Ar vendor : Ns Cm latest
+selects the most recent version currently available.
+.El
+.Pp
+Examples of driver specifications include
+.Ql nvidia ,
+.Ql nvidia:590.44.01 ,
+and
+.Ql amdgpu:latest .
+.Pp
+By default,
+.Nm
+invokes the system package manager in its interactive mode.
+The
+package manager may prompt for confirmation before performing
+transactions, such as installing or removing packages.
+The
+.Fl -batch
+option may be used to suppress interactive prompts and assume
+confirmation.
+This is intended for unattended environments such as
+automated provisioning, configuration management, or installation
+scripts.
+.Sh COMMANDS
+.Bl -tag -width install
+.It Cm install
+Install one or more driver stacks.
+If
+.Fl -auto-detect
+is specified,
+.Nm
+tries to detect GPU and accelerator hardware present in the system and
+installs the default driver stack for each detected device vendor.
+Otherwise, one or more explicit driver specifications must be given.
+.It Cm remove
+Remove installed driver stacks.
+Either explicitly specified drivers,
+or all managed drivers if
+.Fl -all
+is given.
+.It Cm list
+Display information about driver stacks.
+If no options are given,
+this shows drivers available from configured repositories.
+The
+.Fl -installed
+option may be used to display installed drivers instead, or both
+.Fl -available
+and
+.Fl -installed
+may be specified to show both available and installed drivers.
+.El
+.Sh OPTIONS
+Option placement matters.
+Global options must appear before the
+command name.
+Command options appear after the command they apply to.
+.Ss Global Options
+.Bl -tag -width "--verbose"
+.It Fl -quiet
+Suppress routine informational output; print only warnings and errors.
+.It Fl -verbose
+Increase informational output.
+.It Fl -debug
+Enable detailed diagnostic output intended for troubleshooting.
+.It Fl -help
+Display usage information and exit.
+.It Fl -version
+Print program version and exit.
+.El
+.Ss Install Options
+.Bl -tag -width "--dry-run"
+.It Fl -auto-detect
+Automatically select drivers to install based on detected hardware.
+Must not be combined with explicit driver arguments.
+.It Fl -batch
+Run non-interactively, assuming confirmation where required.
+.It Fl -dry-run
+Show what would be changed without modifying the system.
+.It Fl -force
+Proceed even if no compatible hardware was detected for the selected
+driver stack, or other validation checks report potential issues.
+.El
+.Ss Remove Options
+.Bl -tag -width "--dry-run"
+.It Fl -all
+Select for removal all installed driver stacks managed by
+.Nm .
+Must not be combined with explicit driver arguments.
+.It Fl -batch
+Run non-interactively, assuming confirmation where required.
+.It Fl -dry-run
+Show what would be changed without modifying the system.
+.El
+.Ss List Options
+.Bl -tag -width "--installed"
+.It Fl -available
+Show driver stacks available from configured repositories.
+This is
+the default if no listing option is specified.
+.It Fl -installed
+Show driver stacks currently installed on the system.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+Install drivers for detected hardware:
+.Dl Nm Li install --auto-detect
+.Pp
+Install the default version of NVIDIA driver:
+.Dl Nm Li install nvidia
+.Pp
+Install the default version of NVIDIA driver even if no compatible
+NVIDIA hardware is detected:
+.Dl Nm Li install --force nvidia
+.Pp
+Install a specific NVIDIA driver version:
+.Dl Nm Li install nvidia:590.44.01
+.Pp
+Install multiple driver stacks:
+.Dl Nm Li install nvidia amdgpu:latest
+.Pp
+Remove a specific driver:
+.Dl Nm Li remove nvidia
+.Dl Nm Li remove nvidia:590.44.01
+.Pp
+Remove all managed drivers:
+.Dl Nm Li remove --all
+.Pp
+List available or installed drivers:
+.Dl Nm Li list --available
+.Dl Nm Li list --installed
+.Sh AUTHORS
+.An Mikolaj Izdebski Aq Mt mizdebsk@redhat.com

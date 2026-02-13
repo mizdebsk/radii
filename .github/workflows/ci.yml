@@ -27,3 +27,9 @@ jobs:
 
       - name: Run tests
         run: go test -v ./...
+
+      - name: Install mandoc
+        run: sudo apt install -y mandoc
+
+      - name: Lint manpage with mandoc
+        run: mandoc -mdoc -Tlint -Wall man/radii.1

@@ -28,8 +28,11 @@ jobs:
       - name: Run tests
         run: go test -v ./...
 
-      - name: Install mandoc
-        run: sudo apt install -y mandoc
+      - name: Install lint tools
+        run: sudo apt install -y mandoc shellcheck
 
       - name: Lint manpage with mandoc
         run: mandoc -mdoc -Tlint -Wall man/radii.1
+
+      - name: Lint bash completion with shellcheck
+        run: shellcheck completions/radii.bash

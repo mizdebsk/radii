@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
@@ -14,7 +15,7 @@ import (
 var progName = ""
 
 func Execute(argv []string, deps api.CoreDeps, version string) error {
-	progName = argv[0]
+	progName = filepath.Base(argv[0])
 	args := argv[1:]
 	if helpRequested(args) {
 		printRootUsage()

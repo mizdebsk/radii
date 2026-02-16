@@ -156,7 +156,7 @@ func TestIsCompatibleNvidiaDisplay_NotFoundOrInvalid(t *testing.T) {
 
 func TestLoadCompatibleDevices_UsesTestJSON(t *testing.T) {
 	d := newAutoDetector()
-	d.compatibleGPUs = "testdata/hwdata.json"
+	d.hwdataJsonPath = "testdata/hwdata.json"
 	compatible, err := d.loadCompatibleDevices()
 	if err != nil {
 		t.Fatalf("loadCompatibleDevices() error = %v", err)
@@ -168,7 +168,7 @@ func TestLoadCompatibleDevices_UsesTestJSON(t *testing.T) {
 
 func TestDetect_WithA100SysfsAndHwdata(t *testing.T) {
 	d := newAutoDetector()
-	d.compatibleGPUs = "testdata/hwdata.json"
+	d.hwdataJsonPath = "testdata/hwdata.json"
 	d.modaliasRoot = "testdata/sysfs-A100-PCIE-40GB"
 	found, err := d.Detect()
 	if err != nil {

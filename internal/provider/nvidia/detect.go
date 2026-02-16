@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	defaultCompatibleGPUsPath = "/usr/share/radii/nvidia/supported-gpus.json"
-	defaultModaliasRoot       = "/sys/devices"
+	defaultHwdataJsonPath = "/usr/share/radii-hwdata-nv/hwdata-nv.json"
+	defaultModaliasRoot   = "/sys/devices"
 
 	modaliasBus     = "pci"
 	pciClassDisplay = "03"
@@ -22,13 +22,13 @@ const (
 )
 
 type autoDetector struct {
-	compatibleGPUs string
+	hwdataJsonPath string
 	modaliasRoot   string
 }
 
 func newAutoDetector() autoDetector {
 	return autoDetector{
-		compatibleGPUs: defaultCompatibleGPUsPath,
+		hwdataJsonPath: defaultHwdataJsonPath,
 		modaliasRoot:   defaultModaliasRoot,
 	}
 }
@@ -49,7 +49,7 @@ func (d *autoDetector) Detect() (bool, error) {
 	return found, nil
 }
 
-type compatibleGPUFile struct {
+type hardwareDatabase struct {
 	Chips []struct {
 		Name     string   `json:"name"`
 		DevID    string   `json:"devid"`
@@ -58,22 +58,22 @@ type compatibleGPUFile struct {
 }
 
 func (d *autoDetector) loadCompatibleDevices() (map[string]string, error) {
-	log.Logf("loading compatible GPUs from %s", d.compatibleGPUs)
-	data, err := os.ReadFile(d.compatibleGPUs)
+	log.Logf("loading hardware database from %s", d.hwdataJsonPath)
+	hwdataJson, err := os.ReadFile(d.hwdataJsonPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("cannot find compatible GPUs file: %s", d.compatibleGPUs)
+			return nil, fmt.Errorf("cannot find hardware database file: %s", d.hwdataJsonPath)
 		}
-		return nil, fmt.Errorf("failed to read compatible GPUs file %s: %w", d.compatibleGPUs, err)
+		return nil, fmt.Errorf("failed to read hardware database file %s: %w", d.hwdataJsonPath, err)
 	}
 
-	var s compatibleGPUFile
-	if err := json.Unmarshal(data, &s); err != nil {
-		return nil, fmt.Errorf("failed to parse compatible GPUs file %s: %w", d.compatibleGPUs, err)
+	var hwdata hardwareDatabase
+	if err := json.Unmarshal(hwdataJson, &hwdata); err != nil {
+		return nil, fmt.Errorf("failed to parse hardware database file %s: %w", d.hwdataJsonPath, err)
 	}
 
-	result := make(map[string]string)
-	for _, chip := range s.Chips {
+	compatible := make(map[string]string)
+	for _, chip := range hwdata.Chips {
 		if !hasFeature(chip.Features, "kernelopen") {
 			continue
 		}
@@ -81,10 +81,10 @@ func (d *autoDetector) loadCompatibleDevices() (map[string]string, error) {
 		if dev == "" {
 			continue
 		}
-		result[dev] = chip.Name
+		compatible[dev] = chip.Name
 	}
 
-	return result, nil
+	return compatible, nil
 }
 
 func hasFeature(features []string, name string) bool {

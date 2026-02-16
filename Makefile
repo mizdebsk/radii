@@ -11,7 +11,11 @@ build:
 test:
 	go test ./...
 
+vendor-archive:
+	go mod vendor
+	tar czf radii-$(VERSION)-vendor.tar.gz vendor
+
 clean:
 	rm -rf dist
 
-.PHONY: all build test clean
+.PHONY: all build test vendor-archive clean

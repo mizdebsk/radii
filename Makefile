@@ -11,11 +11,12 @@ build:
 test:
 	go test ./...
 
-vendor-archive:
+archive:
 	go mod vendor
 	tar czf radii-$(VERSION)-vendor.tar.gz vendor
+	git archive HEAD --prefix radii-$(VERSION)/ | gzip -9 >radii-$(VERSION).tar.gz
 
 clean:
 	rm -rf dist
 
-.PHONY: all build test vendor-archive clean
+.PHONY: all build test archive clean

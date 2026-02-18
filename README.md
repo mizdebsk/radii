@@ -5,17 +5,17 @@
 radii
 =====
 
-Hardware driver manager for RHEL
+Hardware driver manager for Linux
 
-The radii tool is a command-line utility that provides a
-consistent interface for installing and maintaining third-party
-AI-accelerator and GPU driver stacks on Red Hat Enterprise Linux
-(RHEL).  It detects compatible accelerator hardware, enables the
-appropriate package repositories, and installs the required kernel and
-user-mode components from RHEL-distributed packages.  The tool manages
+The radii tool is a command-line utility that provides a consistent
+interface for installing and maintaining third-party AI-accelerator
+and GPU driver stacks on Linux systems.  It detects compatible
+accelerator hardware, enables the appropriate package repositories,
+and installs the required kernel and user-mode components from
+packages provided by the Linux distribution.  The tool manages
 multi-component driver stacks end-to-end and integrates with the
-standard dnf workflow so that installed drivers are updated through
-normal system package management.
+standard system package manager workflow so that installed drivers are
+updated through normal system package management.
 
 The name "radii" comes from RDI (RHEL Drivers Installation), the core
 purpose of the tool.  It echoes the acronym while also being a real

@@ -7,8 +7,12 @@ import (
 	"github.com/mizdebsk/radii/internal/log"
 )
 
-func List(deps api.CoreDeps, listInst, listAvail, hwdetect bool) ([]api.DriverStatus, error) {
+func List(deps api.CoreDeps, listInst, listAvail, hwdetect, compatibleOnly bool) ([]api.DriverStatus, error) {
 	var result []api.DriverStatus
+
+	if compatibleOnly {
+		hwdetect = true
+	}
 
 	if listAvail {
 		if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
@@ -79,5 +83,21 @@ func List(deps api.CoreDeps, listInst, listAvail, hwdetect bool) ([]api.DriverSt
 		}
 	}
 
+	if compatibleOnly {
+		result = filterCompatible(result)
+	}
+
 	return result, nil
+}
+
+// filterCompatible returns only driver statuses that are compatible with the current hardware.
+// It is used internally by List when compatibleOnly is true.
+func filterCompatible(res []api.DriverStatus) []api.DriverStatus {
+	var out []api.DriverStatus
+	for _, dev := range res {
+		if dev.Compatible {
+			out = append(out, dev)
+		}
+	}
+	return out
 }

@@ -143,14 +143,16 @@ func runList(args []string, deps api.CoreDeps) error {
 	}
 
 	var (
-		flagAvailable bool
-		flagInstalled bool
+		flagAvailable  bool
+		flagInstalled  bool
+		flagCompatible bool
 	)
 
 	fs := flag.NewFlagSet("list", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.BoolVar(&flagAvailable, "available", false, "")
 	fs.BoolVar(&flagInstalled, "installed", false, "")
+	fs.BoolVar(&flagCompatible, "compatible", false, "")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -160,7 +162,7 @@ func runList(args []string, deps api.CoreDeps) error {
 	}
 
 	if flagAvailable || (!flagAvailable && !flagInstalled) {
-		res, err := core.List(deps, true, true, true)
+		res, err := core.List(deps, true, true, true, flagCompatible)
 		if err != nil {
 			return err
 		}
@@ -184,7 +186,7 @@ func runList(args []string, deps api.CoreDeps) error {
 	}
 
 	if flagInstalled {
-		res, err := core.List(deps, true, false, false)
+		res, err := core.List(deps, true, false, flagCompatible, flagCompatible)
 		if err != nil {
 			return err
 		}

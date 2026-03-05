@@ -35,7 +35,7 @@ _radii() {
         _radii_compreply -W "$global_flags --all --batch --dry-run" -- "$cur"
         ;;
       list|ls)
-        _radii_compreply -W "$global_flags --available --installed" -- "$cur"
+        _radii_compreply -W "$global_flags --available --installed --compatible" -- "$cur"
         ;;
       *)
         _radii_compreply -W "$global_flags" -- "$cur"

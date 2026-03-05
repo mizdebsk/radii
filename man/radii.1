@@ -23,6 +23,7 @@
 .Cm list
 .Op Fl -available
 .Op Fl -installed
+.Op Fl -compatible
 .Pp
 .Nm
 .Fl -help
@@ -137,6 +138,9 @@ option may be used to display installed drivers instead, or both
 and
 .Fl -installed
 may be specified to show both available and installed drivers.
+The
+.Fl -compatible
+option restricts output to drivers compatible with detected hardware.
 .El
 .Sh OPTIONS
 Option placement matters.
@@ -188,6 +192,8 @@ This is
 the default if no listing option is specified.
 .It Fl -installed
 Show driver stacks currently installed on the system.
+.It Fl -compatible
+Only list compatible drivers.
 .El
 .Sh EXIT STATUS
 .Ex -std
@@ -218,5 +224,8 @@ Remove all managed drivers:
 List available or installed drivers:
 .Dl Nm Li list --available
 .Dl Nm Li list --installed
+.Pp
+List only drivers compatible with detected hardware:
+.Dl Nm Li list --compatible
 .Sh AUTHORS
 .An Mikolaj Izdebski Aq Mt mizdebsk@redhat.com

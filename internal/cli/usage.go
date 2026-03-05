@@ -53,7 +53,7 @@ Options:
 
 func printListUsage() {
 	fmt.Printf(`Usage:
-  %s list [--available] [--installed]
+  %s list [--available] [--installed] [--compatible]
 
 List driver stacks.
 If no options are given, --available is assumed.
@@ -61,5 +61,6 @@ If no options are given, --available is assumed.
 Options:
   --available   Show drivers available from repositories (default)
   --installed   Show currently installed drivers
+  --compatible  Only list compatible drivers
 `, progName)
 }

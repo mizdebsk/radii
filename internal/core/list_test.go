@@ -13,19 +13,21 @@ import (
 func TestList(t *testing.T) {
 	tests := []struct {
 		name      string
-		listInst  bool
-		listAvail bool
-		hwdetect  bool
-		setup     func(*mocks.MockProvider, *mocks.MockRepositoryManager)
+		listInst       bool
+		listAvail      bool
+		hwdetect       bool
+		compatibleOnly bool
+		setup          func(*mocks.MockProvider, *mocks.MockRepositoryManager)
 		expectErr bool
 		expectLen int
 		checkFunc func([]api.DriverStatus) error
 	}{
 		{
-			name:      "ListInstalledOnly",
-			listInst:  true,
-			listAvail: false,
-			hwdetect:  false,
+			name:           "ListInstalledOnly",
+			listInst:       true,
+			listAvail:      false,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -43,10 +45,11 @@ func TestList(t *testing.T) {
 			},
 		},
 		{
-			name:      "ListAvailableOnly",
-			listInst:  false,
-			listAvail: true,
-			hwdetect:  false,
+			name:           "ListAvailableOnly",
+			listInst:       false,
+			listAvail:      true,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -65,10 +68,11 @@ func TestList(t *testing.T) {
 			},
 		},
 		{
-			name:      "ListBothInstalledAndAvailable",
-			listInst:  true,
-			listAvail: true,
-			hwdetect:  false,
+			name:           "ListBothInstalledAndAvailable",
+			listInst:       true,
+			listAvail:      true,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -96,10 +100,11 @@ func TestList(t *testing.T) {
 			},
 		},
 		{
-			name:      "ListWithHardwareDetection",
-			listInst:  true,
-			listAvail: true,
-			hwdetect:  true,
+			name:           "ListWithHardwareDetection",
+			listInst:       true,
+			listAvail:      true,
+			hwdetect:       true,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -120,10 +125,11 @@ func TestList(t *testing.T) {
 			},
 		},
 		{
-			name:      "RepositoryEnableFails",
-			listInst:  false,
-			listAvail: true,
-			hwdetect:  false,
+			name:           "RepositoryEnableFails",
+			listInst:       false,
+			listAvail:      true,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				rm.EXPECT().EnsureRepositoriesEnabled().Return(fmt.Errorf("repo error"))
 			},
@@ -131,10 +137,11 @@ func TestList(t *testing.T) {
 			expectLen: 0,
 		},
 		{
-			name:      "ListInstalledFails",
-			listInst:  true,
-			listAvail: false,
-			hwdetect:  false,
+			name:           "ListInstalledFails",
+			listInst:       true,
+			listAvail:      false,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -144,10 +151,11 @@ func TestList(t *testing.T) {
 			expectLen: 0,
 		},
 		{
-			name:      "ListAvailableFails",
-			listInst:  true,
-			listAvail: true,
-			hwdetect:  false,
+			name:           "ListAvailableFails",
+			listInst:       true,
+			listAvail:      true,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -159,10 +167,11 @@ func TestList(t *testing.T) {
 			expectLen: 0,
 		},
 		{
-			name:      "EmptyResults",
-			listInst:  true,
-			listAvail: true,
-			hwdetect:  false,
+			name:           "EmptyResults",
+			listInst:       true,
+			listAvail:      true,
+			hwdetect:       false,
+			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
@@ -172,6 +181,59 @@ func TestList(t *testing.T) {
 			},
 			expectErr: false,
 			expectLen: 0,
+		},
+		{
+			name:           "ListCompatibleOnlyFiltersToCompatible",
+			listInst:       true,
+			listAvail:      true,
+			hwdetect:       true,
+			compatibleOnly: true,
+			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+				p.EXPECT().GetID().Return("nvidia").AnyTimes()
+				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().DetectHardware().Return(true, nil)
+				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
+				p.EXPECT().ListAvailable().Return([]api.DriverID{
+					{ProviderID: "nvidia", Version: "570"},
+					{ProviderID: "nvidia", Version: "560"},
+				}, nil)
+			},
+			expectErr: false,
+			expectLen: 2,
+			checkFunc: func(result []api.DriverStatus) error {
+				for _, r := range result {
+					if !r.Compatible {
+						return fmt.Errorf("expected only compatible drivers, got Compatible=false for %s", r.ID.Version)
+					}
+				}
+				return nil
+			},
+		},
+		{
+			name:           "ListCompatibleOnlyExcludesIncompatible",
+			listInst:       true,
+			listAvail:      true,
+			hwdetect:       true,
+			compatibleOnly: true,
+			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+				p.EXPECT().GetID().Return("nvidia").AnyTimes()
+				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().DetectHardware().Return(false, nil)
+				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
+				p.EXPECT().ListAvailable().Return([]api.DriverID{
+					{ProviderID: "nvidia", Version: "570"},
+				}, nil)
+			},
+			expectErr: false,
+			expectLen: 0,
+			checkFunc: func(result []api.DriverStatus) error {
+				if len(result) != 0 {
+					return fmt.Errorf("expected no drivers when hardware not compatible, got %d", len(result))
+				}
+				return nil
+			},
 		},
 	}
 
@@ -190,7 +252,7 @@ func TestList(t *testing.T) {
 				Providers:         []api.Provider{mockProvider},
 			}
 
-			result, err := List(deps, tt.listInst, tt.listAvail, tt.hwdetect)
+			result, err := List(deps, tt.listInst, tt.listAvail, tt.hwdetect, tt.compatibleOnly)
 			if (err != nil) != tt.expectErr {
 				t.Errorf("List() error = %v, expectErr %v", err, tt.expectErr)
 				return

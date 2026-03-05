@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -267,6 +268,59 @@ func TestList(t *testing.T) {
 				if err := tt.checkFunc(result); err != nil {
 					t.Errorf("List() check failed: %v", err)
 				}
+			}
+		})
+	}
+}
+
+func TestFilterCompatible(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []api.DriverStatus
+		want []api.DriverStatus
+	}{
+		{
+			name: "Empty",
+			in:   nil,
+			want: nil,
+		},
+		{
+			name: "AllCompatible",
+			in: []api.DriverStatus{
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: true},
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
+			},
+			want: []api.DriverStatus{
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: true},
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
+			},
+		},
+		{
+			name: "NoneCompatible",
+			in: []api.DriverStatus{
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: false},
+			},
+			want: nil,
+		},
+		{
+			name: "MixedFiltersToCompatibleOnly",
+			in: []api.DriverStatus{
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: false},
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
+				{ID: api.DriverID{ProviderID: "amd", Version: "1.0"}, Compatible: false},
+				{ID: api.DriverID{ProviderID: "amd", Version: "2.0"}, Compatible: true},
+			},
+			want: []api.DriverStatus{
+				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
+				{ID: api.DriverID{ProviderID: "amd", Version: "2.0"}, Compatible: true},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := filterCompatible(tt.in)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("filterCompatible() = %v, want %v", got, tt.want)
 			}
 		})
 	}

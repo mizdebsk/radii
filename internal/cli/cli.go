@@ -22,7 +22,10 @@ func Execute(argv []string, deps api.CoreDeps, version string) error {
 		return nil
 	}
 
-	var showVersion bool
+	var (
+		showVersion       bool
+		skipSubscriptions bool
+	)
 
 	fs := flag.NewFlagSet(progName, flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
@@ -31,6 +34,7 @@ func Execute(argv []string, deps api.CoreDeps, version string) error {
 	fs.BoolVar(&log.Quiet, "quiet", false, "")
 	fs.BoolVar(&log.Debug, "debug", false, "")
 	fs.BoolVar(&showVersion, "version", false, "")
+	fs.BoolVar(&skipSubscriptions, "skip-subscriptions", false, "")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -38,6 +42,10 @@ func Execute(argv []string, deps api.CoreDeps, version string) error {
 	if showVersion {
 		printVersion(progName, version)
 		return nil
+	}
+
+	if skipSubscriptions {
+		deps.RepositoryManager = noopRepositoryManager{}
 	}
 
 	rest := fs.Args()
@@ -72,11 +80,10 @@ func runInstall(args []string, deps api.CoreDeps) error {
 	}
 
 	var (
-		autoDetect        bool
-		batchMode         bool
-		dryRun            bool
-		force             bool
-		skipSubscriptions bool
+		autoDetect bool
+		batchMode  bool
+		dryRun     bool
+		force      bool
 	)
 
 	fs := flag.NewFlagSet("install", flag.ContinueOnError)
@@ -85,13 +92,8 @@ func runInstall(args []string, deps api.CoreDeps) error {
 	fs.BoolVar(&batchMode, "batch", false, "")
 	fs.BoolVar(&dryRun, "dry-run", false, "")
 	fs.BoolVar(&force, "force", false, "")
-	fs.BoolVar(&skipSubscriptions, "skip-subscriptions", false, "")
 	if err := fs.Parse(args); err != nil {
 		return err
-	}
-
-	if skipSubscriptions {
-		deps.RepositoryManager = noopRepositoryManager{}
 	}
 
 	drivers := fs.Args()

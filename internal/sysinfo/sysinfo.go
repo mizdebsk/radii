@@ -2,6 +2,7 @@ package sysinfo
 
 import (
 	"bufio"
+	"encoding/json"
 	"os"
 	"runtime"
 	"strconv"
@@ -11,20 +12,24 @@ import (
 )
 
 const osReleasePath = "/etc/os-release"
+const cloudInfoPath = "/run/cloud-init/instance-data.json"
 
 type SysInfo struct {
-	IsRhel    bool
-	OsVersion int
-	Arch      string
+	IsRhel        bool
+	OsVersion     int
+	Arch          string
+	CloudProvider string
 }
 
 func DetectSysInfo() SysInfo {
 	arch := detectArch()
 	isRhel, osVersion := detectOs(osReleasePath)
+	cloudProvider := detectCloudProvider(cloudInfoPath)
 	return SysInfo{
-		IsRhel:    isRhel,
-		OsVersion: osVersion,
-		Arch:      arch,
+		IsRhel:        isRhel,
+		OsVersion:     osVersion,
+		Arch:          arch,
+		CloudProvider: cloudProvider,
 	}
 }
 
@@ -80,4 +85,30 @@ func detectOs(path string) (bool, int) {
 		return false, 0
 	}
 	return isRhel, osVersion
+}
+
+type cloudInfo struct {
+	V1 struct {
+		CloudName string `json:"cloud_name"`
+	} `json:"v1"`
+}
+
+func detectCloudProvider(path string) string {
+	cloudInfoJson, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Logf("cloud instance data absent: %s", path)
+		} else {
+			log.Warnf("failed to read cloud instance data file %s: %v", path, err)
+		}
+		return ""
+	}
+
+	var info cloudInfo
+	if err := json.Unmarshal(cloudInfoJson, &info); err != nil {
+		log.Warnf("failed to parse cloud instance data file %s: %v", path, err)
+		return ""
+	}
+
+	return info.V1.CloudName
 }

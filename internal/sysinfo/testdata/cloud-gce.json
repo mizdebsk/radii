@@ -1,0 +1,10 @@
+{
+  "cloud_name": "gce",
+  "platform": "gce",
+  "v1": {
+    "cloud_name": "gce",
+    "platform": "gce",
+    "instance_id": "40841735314016434",
+    "region": "us-central1"
+  }
+}

@@ -2,11 +2,9 @@ package amd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/hwdetect"
-	"github.com/mizdebsk/radii/internal/log"
 )
 
 const (
@@ -111,7 +109,6 @@ func (p *prov) ListAvailable() ([]api.DriverID, error) {
 	}
 	_, missing := partitionPackages(all, stackPackages()...)
 	if len(missing) > 0 {
-		log.Warnf("%s stack is currently NOT available; missing: %s", p.GetName(), strings.Join(missing, ", "))
 		return []api.DriverID{}, nil
 	}
 	return []api.DriverID{{ProviderID: p.GetID(), Version: variantLatest}}, nil

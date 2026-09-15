@@ -172,6 +172,12 @@ Show what would be changed without modifying the system.
 .It Fl -force
 Proceed even if no compatible hardware was detected for the selected
 driver stack, or other validation checks report potential issues.
+.It Fl -skip-subscriptions
+Skip Red Hat Subscription Manager (RHSM) setup.
+Repositories must already be configured; packages will be installed
+from existing DNF sources.
+Intended for environments where repositories are pre-configured
+and subscription management is not required.
 .El
 .Ss Remove Options
 .Bl -tag -width "--dry-run"

@@ -30,10 +30,11 @@ Either specify drivers explicitly, or use --auto-detect to install
 the default drivers for hardware detected in the system.
 
 Options:
-  --auto-detect   Select drivers automatically (exclusive with arguments)
-  --batch         Run non-interactively
-  --dry-run       Show what would be done without making changes
-  --force         Install even if detection does not match hardware
+  --auto-detect          Select drivers automatically (exclusive with arguments)
+  --batch                Run non-interactively
+  --dry-run              Show what would be done without making changes
+  --force                Install even if detection does not match hardware
+  --skip-subscriptions   Skip Red Hat Subscription Manager (RHSM) setup
 `, progName, progName)
 }
 

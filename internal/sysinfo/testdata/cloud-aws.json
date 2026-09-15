@@ -1,0 +1,10 @@
+{
+  "cloud_name": "aws",
+  "platform": "ec2",
+  "v1": {
+    "cloud_name": "aws",
+    "platform": "ec2",
+    "instance_id": "i-06e536175230a52c8",
+    "region": "us-east-2"
+  }
+}

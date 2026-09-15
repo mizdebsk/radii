@@ -46,3 +46,15 @@ func (mr *MockRepositoryManagerMockRecorder) EnsureRepositoriesEnabled() *gomock
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureRepositoriesEnabled", reflect.TypeOf((*MockRepositoryManager)(nil).EnsureRepositoriesEnabled))
 }
+
+// SetSubscriptionsEnabled mocks base method.
+func (m *MockRepositoryManager) SetSubscriptionsEnabled(enabled bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetSubscriptionsEnabled", enabled)
+}
+
+// SetSubscriptionsEnabled indicates an expected call of SetSubscriptionsEnabled.
+func (mr *MockRepositoryManagerMockRecorder) SetSubscriptionsEnabled(enabled interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSubscriptionsEnabled", reflect.TypeOf((*MockRepositoryManager)(nil).SetSubscriptionsEnabled), enabled)
+}

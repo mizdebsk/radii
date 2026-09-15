@@ -45,7 +45,7 @@ func Execute(argv []string, deps api.CoreDeps, version string) error {
 	}
 
 	if skipSubscriptions {
-		deps.RepositoryManager = noopRepositoryManager{}
+		deps.RepositoryManager.SetSubscriptionsEnabled(false)
 	}
 
 	rest := fs.Args()
@@ -63,14 +63,6 @@ func Execute(argv []string, deps api.CoreDeps, version string) error {
 	default:
 		return fmt.Errorf("unknown command: %s", rest[0])
 	}
-}
-
-type noopRepositoryManager struct{}
-
-func (noopRepositoryManager) EnsureRepositoriesEnabled() error {
-	log.Warnf("Skipping Red Hat Subscription Manager (RHSM) setup.")
-	log.Warnf("Repositories must already be configured; packages will be installed from existing DNF sources.")
-	return nil
 }
 
 func runInstall(args []string, deps api.CoreDeps) error {

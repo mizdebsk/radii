@@ -68,6 +68,14 @@ func TestRhsm(t *testing.T) {
 			},
 		},
 		{
+			name:    "SubscriptionManagerDisabled",
+			sysInfo: sysinfo.SysInfo{IsRhel: true},
+			testFunc: func(t *testing.T) error {
+				rm.SetSubscriptionsEnabled(false)
+				return rm.EnsureRepositoriesEnabled()
+			},
+		},
+		{
 			name: "NonRhelSystem",
 			testFunc: func(t *testing.T) error {
 				return rm.EnsureRepositoriesEnabled()
@@ -79,6 +87,7 @@ func TestRhsm(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			mockExec = mocks.NewMockExecutor(ctrl)
 			rm = repoMgr{
+				rhsmEnabled:    true,
 				systemInfo:     tt.sysInfo,
 				executor:       mockExec,
 				redhatRepoPath: "testdata/rhel10.repo",

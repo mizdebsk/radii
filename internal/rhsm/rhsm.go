@@ -16,6 +16,7 @@ const (
 )
 
 type repoMgr struct {
+	rhsmEnabled    bool
 	systemInfo     sysinfo.SysInfo
 	executor       api.Executor
 	redhatRepoPath string
@@ -26,6 +27,7 @@ var _ api.RepositoryManager = (*repoMgr)(nil)
 
 func NewRepositoryManager(executor api.Executor, systemInfo sysinfo.SysInfo) api.RepositoryManager {
 	return &repoMgr{
+		rhsmEnabled:    true,
 		systemInfo:     systemInfo,
 		executor:       executor,
 		redhatRepoPath: defaultRedhatRepoPath,
@@ -33,7 +35,16 @@ func NewRepositoryManager(executor api.Executor, systemInfo sysinfo.SysInfo) api
 	}
 }
 
+func (rm *repoMgr) SetSubscriptionsEnabled(enabled bool) {
+	rm.rhsmEnabled = enabled
+}
+
 func (rm *repoMgr) EnsureRepositoriesEnabled() error {
+	if !rm.rhsmEnabled {
+		log.Warnf("Skipping Red Hat Subscription Manager (RHSM) setup.")
+		log.Warnf("Repositories must already be configured; packages will be installed from existing DNF sources.")
+		return nil
+	}
 	if rm.systemInfo.IsRhel {
 		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
 		if rm.subscriptionManagerPresent() {

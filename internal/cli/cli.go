@@ -57,6 +57,14 @@ func Execute(argv []string, deps api.CoreDeps, version string) error {
 	}
 }
 
+type noopRepositoryManager struct{}
+
+func (noopRepositoryManager) EnsureRepositoriesEnabled() error {
+	log.Warnf("Skipping Red Hat Subscription Manager (RHSM) setup.")
+	log.Warnf("Repositories must already be configured; packages will be installed from existing DNF sources.")
+	return nil
+}
+
 func runInstall(args []string, deps api.CoreDeps) error {
 	if helpRequested(args) {
 		printInstallUsage()
@@ -64,10 +72,11 @@ func runInstall(args []string, deps api.CoreDeps) error {
 	}
 
 	var (
-		autoDetect bool
-		batchMode  bool
-		dryRun     bool
-		force      bool
+		autoDetect        bool
+		batchMode         bool
+		dryRun            bool
+		force             bool
+		skipSubscriptions bool
 	)
 
 	fs := flag.NewFlagSet("install", flag.ContinueOnError)
@@ -76,8 +85,13 @@ func runInstall(args []string, deps api.CoreDeps) error {
 	fs.BoolVar(&batchMode, "batch", false, "")
 	fs.BoolVar(&dryRun, "dry-run", false, "")
 	fs.BoolVar(&force, "force", false, "")
+	fs.BoolVar(&skipSubscriptions, "skip-subscriptions", false, "")
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+
+	if skipSubscriptions {
+		deps.RepositoryManager = noopRepositoryManager{}
 	}
 
 	drivers := fs.Args()

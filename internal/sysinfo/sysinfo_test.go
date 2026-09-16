@@ -41,3 +41,47 @@ func TestDetectRhelVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectCloud(t *testing.T) {
+
+	tests := []struct {
+		name          string
+		path          string
+		cloudProvider string
+	}{
+		{
+			name:          "AWS",
+			path:          "testdata/cloud-aws.json",
+			cloudProvider: "aws",
+		},
+		{
+			name:          "Azure",
+			path:          "testdata/cloud-azure.json",
+			cloudProvider: "azure",
+		},
+		{
+			name:          "GCE",
+			path:          "testdata/cloud-gce.json",
+			cloudProvider: "gce",
+		},
+		{
+			name:          "CloudDataNonExistent",
+			path:          "testdata/this-file-does-not-exist.json",
+			cloudProvider: "",
+		},
+		{
+			name:          "CloudInvalidFormat",
+			path:          "testdata/cloud-invalid.json",
+			cloudProvider: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cloudProvider := detectCloudProvider(tt.path)
+			if cloudProvider != tt.cloudProvider {
+				t.Fatalf("detectCloudProvider(%q) = %q, %q", tt.path, cloudProvider, tt.cloudProvider)
+			}
+		})
+	}
+}

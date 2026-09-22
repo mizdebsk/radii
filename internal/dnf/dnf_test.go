@@ -1,6 +1,7 @@
 package dnf
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -259,6 +260,61 @@ func TestDnf(t *testing.T) {
 			err := tt.testFunc(t)
 			if (err != nil) != tt.expectErr {
 				t.Errorf("Expected error: %v, but got: %v", tt.expectErr, err)
+			}
+		})
+	}
+}
+
+func TestDnfDoesNotCacheQueryFailures(t *testing.T) {
+	tests := []struct {
+		name    string
+		command string
+		args    []string
+		list    func(*pkgMgr) ([]api.PackageInfo, error)
+	}{
+		{
+			name:    "Available",
+			command: "mydnf",
+			args: []string{
+				"-q", "repoquery", "--qf",
+				"QQQ|%{name}|%{epoch}|%{version}|%{release}|%{arch}|%{sourcerpm}|%{repoid}|YYY\n",
+			},
+			list: (*pkgMgr).ListAvailablePackages,
+		},
+		{
+			name:    "Installed",
+			command: "rpm",
+			args: []string{
+				"-qa", "--qf",
+				"QQQ|%|NAME?{%{NAME}}||%|EPOCH?{%{EPOCH}}||%|VERSION?{%{VERSION}}||%|RELEASE?{%{RELEASE}}||%|ARCH?{%{ARCH}}||%|SOURCERPM?{%{SOURCERPM}}|||YYY\n",
+			},
+			list: (*pkgMgr).ListInstalledPackages,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resetPackageCaches(t)
+			ctrl := gomock.NewController(t)
+			mockExec := mocks.NewMockExecutor(ctrl)
+			pm := &pkgMgr{bin: "mydnf", exec: mockExec}
+			queryErr := errors.New("query failed")
+			gomock.InOrder(
+				mockExec.EXPECT().RunCapture(tt.command, tt.args).Return(nil, queryErr).Times(1),
+				mockExec.EXPECT().RunCapture(tt.command, tt.args).Return([]string{
+					"QQQ|ant-junit|0|1.10.15|32.fc43|noarch|ant-1.10.15-32.fc43.src.rpm||YYY",
+					"QQQ|bash|0|5.3.0|2.fc43|x86_64|bash-5.3.0-2.fc43.src.rpm||YYY",
+				}, nil).Times(1),
+			)
+			out, err := tt.list(pm)
+			if !errors.Is(err, queryErr) || len(out) != 0 {
+				t.Fatalf("First lookup = %v, %v; want no packages and %v", out, err, queryErr)
+			}
+			for i := 0; i < 2; i++ {
+				out, err := tt.list(pm)
+				if err != nil {
+					t.Fatalf("Lookup after failure: %v", err)
+				}
+				assertTwoPackagesAntBash(out, t)
 			}
 		})
 	}

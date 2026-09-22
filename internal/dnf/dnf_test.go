@@ -7,8 +7,19 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/cache"
 	"github.com/mizdebsk/radii/internal/mocks"
 )
+
+func resetPackageCaches(t *testing.T) {
+	t.Helper()
+	// Tests using the process-wide installed cache must remain sequential.
+	reset := func() {
+		installedCache = cache.Cache[[]api.PackageInfo]{}
+	}
+	reset()
+	t.Cleanup(reset)
+}
 
 func assertTwoPackagesAntBash(out []api.PackageInfo, t *testing.T) {
 	if len(out) != 2 {
@@ -143,6 +154,28 @@ func TestDnf(t *testing.T) {
 			},
 		},
 		{
+			name: "ListAvailableCached",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					RunCapture(dnfBin, []string{
+						"-q", "repoquery", "--qf",
+						"QQQ|%{name}|%{epoch}|%{version}|%{release}|%{arch}|%{sourcerpm}|%{repoid}|YYY\n",
+					}).
+					Return([]string{
+						"QQQ|ant-junit|0|1.10.15|32.fc43|noarch|ant-1.10.15-32.fc43.src.rpm|updates-testing|YYY",
+						"QQQ|bash|0|5.3.0|2.fc43|x86_64|bash-5.3.0-2.fc43.src.rpm|fedora|YYY",
+					}, nil).Times(1)
+				out, err := pm.ListAvailablePackages()
+				if err != nil {
+					return err
+				}
+				assertTwoPackagesAntBash(out, t)
+				out, err = pm.ListAvailablePackages()
+				assertTwoPackagesAntBash(out, t)
+				return err
+			},
+		},
+		{
 			name: "ListInstalledFailure",
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().
@@ -184,7 +217,21 @@ func TestDnf(t *testing.T) {
 		{
 			name: "ListInstalledCached",
 			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					RunCapture("rpm", []string{
+						"-qa", "--qf",
+						"QQQ|%|NAME?{%{NAME}}||%|EPOCH?{%{EPOCH}}||%|VERSION?{%{VERSION}}||%|RELEASE?{%{RELEASE}}||%|ARCH?{%{ARCH}}||%|SOURCERPM?{%{SOURCERPM}}|||YYY\n",
+					}).
+					Return([]string{
+						"QQQ|ant-junit|0|1.10.15|32.fc43|noarch|ant-1.10.15-32.fc43.src.rpm||YYY",
+						"QQQ|bash|0|5.3.0|2.fc43|x86_64|bash-5.3.0-2.fc43.src.rpm||YYY",
+					}, nil).Times(1)
 				out, err := pm.ListInstalledPackages()
+				if err != nil {
+					return err
+				}
+				assertTwoPackagesAntBash(out, t)
+				out, err = pm.ListInstalledPackages()
 				assertTwoPackagesAntBash(out, t)
 				return err
 			},
@@ -202,6 +249,7 @@ func TestDnf(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			resetPackageCaches(t)
 			ctrl := gomock.NewController(t)
 			mockExec = mocks.NewMockExecutor(ctrl)
 			pm = pkgMgr{

@@ -60,7 +60,8 @@ func (rm *repoMgr) GetRepoIDs(channels []string) ([]string, error) {
 		}
 	}
 	if len(missing) > 0 {
-		return nil, fmt.Errorf("required RHEL repository definitions are missing from %s: %s; ensure the system is registered and subscribed (see https://access.redhat.com/solutions/253273), or use --skip-subscriptions before the command to use already-configured DNF repositories", rm.redhatRepoPath, strings.Join(missing, ", "))
+		err := fmt.Errorf("required RHEL repository definitions are missing from %s: %s", rm.redhatRepoPath, strings.Join(missing, ", "))
+		return nil, fmt.Errorf("%w\nAlternatively, use --skip-subscriptions before the command to use already-configured DNF repositories.", rm.withSubscriptionHelp(err))
 	}
 	return repos, nil
 }
@@ -133,4 +134,8 @@ func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 
 	log.Logf("repositories were enabled successfully")
 	return nil
+}
+
+func (rm *repoMgr) withSubscriptionHelp(err error) error {
+	return fmt.Errorf("%w\nPlease ensure the system is registered and subscribed (see https://access.redhat.com/solutions/253273).", err)
 }

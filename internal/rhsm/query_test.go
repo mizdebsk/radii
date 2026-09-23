@@ -46,10 +46,13 @@ func TestQueryRepositories(t *testing.T) {
 				if err == nil {
 					t.Fatal("expected missing repository error")
 				}
-				for _, fragment := range append(tt.missing, "registered and subscribed", "--skip-subscriptions") {
+				for _, fragment := range append(tt.missing, path, "definitions are missing", "https://", "--skip-subscriptions") {
 					if !strings.Contains(err.Error(), fragment) {
 						t.Errorf("error %q does not contain %q", err, fragment)
 					}
+				}
+				if strings.Contains(err.Error(), "failed to enable") {
+					t.Errorf("read-only check reported an enablement failure: %v", err)
 				}
 			} else if err != nil || !reflect.DeepEqual(got, tt.want) {
 				t.Fatalf("GetRepoIDs() = %v, %v; want %v", got, err, tt.want)

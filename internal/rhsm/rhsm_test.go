@@ -1,7 +1,9 @@
 package rhsm
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -39,6 +41,7 @@ func TestRhsm(t *testing.T) {
 			name:    "EnableReposFailure",
 			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 5, Arch: "sparc"},
 			testFunc: func(t *testing.T) error {
+				cause := fmt.Errorf("hey, you don't have a valid subscription")
 				mockExec.EXPECT().
 					Run(rm.rhsmExecPath, []string{
 						"repos",
@@ -47,8 +50,17 @@ func TestRhsm(t *testing.T) {
 						"--enable", "rhel-5-for-sparc-extensions-rpms",
 						"--enable", "rhel-5-for-sparc-supplementary-rpms",
 					}).
-					Return(fmt.Errorf("hey, you don't have a valid subscription"))
-				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
+					Return(cause)
+				err := rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
+				if !errors.Is(err, cause) {
+					t.Fatalf("expected subscription-manager error to be preserved, got %v", err)
+				}
+				for _, fragment := range []string{"failed to enable required repositories", cause.Error(), "https://"} {
+					if !strings.Contains(err.Error(), fragment) {
+						t.Errorf("error %q does not contain %q", err, fragment)
+					}
+				}
+				return err
 			},
 			expectErr: true,
 		},

@@ -27,6 +27,10 @@ func (p *prov) GetName() string {
 	return "AMD GPU"
 }
 
+func (p *prov) RequiredChannels() []string {
+	return []string{"BaseOS", "AppStream", "Extensions"}
+}
+
 func NewProvider(pm api.PackageManager) api.Provider {
 	return &prov{
 		PM: pm,

@@ -4,7 +4,7 @@ package api
 
 type RepositoryManager interface {
 	SetSubscriptionsEnabled(enabled bool)
-	EnsureRepositoriesEnabled() error
+	EnsureRepositoriesEnabled(channels []string) error
 }
 
 type DriverID struct {

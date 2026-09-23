@@ -14,12 +14,8 @@ func List(deps api.CoreDeps, listInst, listAvail, hwdetect, compatibleOnly bool)
 		hwdetect = true
 	}
 
-	if listAvail {
-		if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
-			return result, fmt.Errorf("failed to verify/enable repositories: %w", err)
-		}
-	}
-
+	var providers []api.Provider
+	var compatibility []bool
 	for _, provider := range deps.Providers {
 		var compat bool
 		if hwdetect {
@@ -29,6 +25,24 @@ func List(deps api.CoreDeps, listInst, listAvail, hwdetect, compatibleOnly bool)
 				log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
 			}
 		}
+		if compatibleOnly && !compat {
+			continue
+		}
+		providers = append(providers, provider)
+		compatibility = append(compatibility, compat)
+	}
+	if len(providers) == 0 {
+		return result, nil
+	}
+
+	if listAvail {
+		if err := deps.RepositoryManager.EnsureRepositoriesEnabled(requiredChannels(providers)); err != nil {
+			return result, fmt.Errorf("failed to verify/enable repositories: %w", err)
+		}
+	}
+
+	for i, provider := range providers {
+		compat := compatibility[i]
 		var installed []api.DriverID
 		if listInst {
 			var err error
@@ -83,21 +97,5 @@ func List(deps api.CoreDeps, listInst, listAvail, hwdetect, compatibleOnly bool)
 		}
 	}
 
-	if compatibleOnly {
-		result = filterCompatible(result)
-	}
-
 	return result, nil
-}
-
-// filterCompatible returns only driver statuses that are compatible with the current hardware.
-// It is used internally by List when compatibleOnly is true.
-func filterCompatible(res []api.DriverStatus) []api.DriverStatus {
-	var out []api.DriverStatus
-	for _, dev := range res {
-		if dev.Compatible {
-			out = append(out, dev)
-		}
-	}
-	return out
 }

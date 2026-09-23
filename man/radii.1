@@ -1,4 +1,4 @@
-.Dd September 15, 2026
+.Dd September 23, 2026
 .Dt RADII 1
 .Os
 .Sh NAME
@@ -150,6 +150,7 @@ Option placement matters.
 Global options must appear before the
 command name.
 Command options appear after the command they apply to.
+Install options must precede explicit driver arguments.
 .Ss Global Options
 .Bl -tag -width "--verbose"
 .It Fl -quiet
@@ -191,6 +192,41 @@ driver stack, or other validation checks report potential issues.
 With
 .Fl -auto-detect ,
 allow installing drivers for all detected providers.
+.It Fl K Ar release , Fl -kernel Ar release
+Install the NVIDIA driver for a specific kernel release, in
+.Ar version-release
+format, optionally followed by the system's architecture suffix and
+a variant suffix such as
+.Ql +64k .
+For example,
+.Ql 6.12.0-211.51.1.el10_2
+and
+.Ql 6.12.0-211.51.1.el10_2.aarch64+64k
+are accepted on aarch64.
+The selected driver version must have a matching kernel module package
+available in the configured repositories.
+.Pp
+If omitted, DNF selects the latest available NVIDIA kernel module for
+the selected variant and installs its matching kernel as a dependency.
+The running kernel version is not used to pin the installation.
+AMD drivers do not support selecting a specific kernel version.
+.It Fl -kernel-variant Ar variant
+Select the NVIDIA kernel variant independently of the kernel version.
+Use
+.Ql default ,
+.Ql 4k ,
+or an empty value
+.Pq Fl -kernel-variant=
+for the default variant, or
+.Ql 64k
+for the aarch64 kernel with 64 KiB pages.
+.Pp
+If omitted, the running kernel variant is used, unless
+.Fl -kernel
+includes a variant suffix.
+An explicit variant must agree with any variant suffix in the kernel
+release.
+AMD ignores the variant and always installs its default kernel module.
 .El
 .Ss Remove Options
 .Bl -tag -width "--dry-run"
@@ -232,6 +268,16 @@ NVIDIA hardware is detected:
 .Pp
 Install a specific NVIDIA driver version:
 .Dl Nm Li install nvidia:590.44.01
+.Pp
+Install NVIDIA drivers for the latest 64k kernel on aarch64:
+.Dl Nm Li install --kernel-variant 64k nvidia
+.Pp
+Install NVIDIA drivers for the latest default kernel variant,
+even when running a 64k kernel:
+.Dl Nm Li install --kernel-variant default nvidia
+.Pp
+Install a specific NVIDIA driver for a specific 64k kernel:
+.Dl Nm Li install --kernel 6.12.0-211.51.1.el10_2 --kernel-variant 64k nvidia:580.178.04
 .Pp
 Install multiple driver stacks:
 .Dl Nm Li install nvidia amdgpu:latest

@@ -59,7 +59,7 @@ The simplest way to install drivers is:
 In this mode,
 .Nm
 attempts to detect accelerator hardware present in the system and
-installs the default driver stack for each detected device vendor.
+selects a driver stack automatically.
 .Pp
 Hardware detection is performed on a best-effort basis.
 Because
@@ -114,13 +114,9 @@ scripts.
 .Bl -tag -width install
 .It Cm install
 Install one or more driver stacks.
-If
+Specify drivers explicitly, or use
 .Fl -auto-detect
-is specified,
-.Nm
-tries to detect GPU and accelerator hardware present in the system and
-installs the default driver stack for each detected device vendor.
-Otherwise, one or more explicit driver specifications must be given.
+for automatic selection.
 .It Cm remove
 Remove installed driver stacks.
 Either explicitly specified drivers,
@@ -175,7 +171,11 @@ Print program version and exit.
 .Ss Install Options
 .Bl -tag -width "--dry-run"
 .It Fl -auto-detect
-Automatically select drivers to install based on detected hardware.
+Automatically select a driver stack for detected hardware.
+Driver stacks from different providers may conflict.
+Requires exactly one detected hardware provider.
+If multiple providers are detected, the command fails without making changes;
+specify one or more drivers explicitly instead.
 Must not be combined with explicit driver arguments.
 .It Fl -batch
 Run non-interactively, assuming confirmation where required.

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/log"
@@ -74,6 +75,13 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 	}
 	if len(detectedProviders) == 0 {
 		return fmt.Errorf("no compatible hardware found")
+	}
+	if len(detectedProviders) > 1 {
+		var names []string
+		for _, provider := range detectedProviders {
+			names = append(names, fmt.Sprintf("%s (%s)", provider.GetName(), provider.GetID()))
+		}
+		return fmt.Errorf("multiple hardware providers detected: %s; select one or more drivers explicitly with 'radii install <vendor>:<version> ...'; use 'radii list --compatible' to see available driver IDs", strings.Join(names, ", "))
 	}
 	if err := prepareRepositories(deps, detectedProviders, false); err != nil {
 		return err

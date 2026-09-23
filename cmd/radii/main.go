@@ -21,7 +21,11 @@ var version = "dev"
 func main() {
 	ctx := context.Background()
 	executor := exec.NewExecutor(ctx)
-	systemInfo := sysinfo.DetectSysInfo()
+	systemInfo, err := sysinfo.DetectSysInfo()
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
 
 	packageManager := dnf.NewPackageManager(executor)
 	repositoryManager := rhsm.NewRepositoryManager(executor, systemInfo)

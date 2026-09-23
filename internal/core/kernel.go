@@ -12,9 +12,6 @@ import (
 var kernelVersionPattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+(?:\.[0-9]+)*(?:\.(?:el|fc)[0-9]+(?:_[0-9]+)?)?$`)
 
 func resolveKernel(system sysinfo.SysInfo, options api.KernelOptions) (api.KernelTarget, error) {
-	if system.Arch == "" {
-		return api.KernelTarget{}, fmt.Errorf("unable to determine kernel architecture")
-	}
 	kernel := api.KernelTarget{Arch: system.Arch, Variant: system.KernelVariant}
 	version, embeddedVariant, hasVariant := strings.Cut(options.Version, "+")
 	if hasVariant {

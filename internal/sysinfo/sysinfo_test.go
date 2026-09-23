@@ -1,8 +1,10 @@
 package sysinfo
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -27,7 +29,10 @@ func TestDetectSysInfo(t *testing.T) {
 			if err := os.WriteFile(path, []byte(release+"\n"), 0o600); err != nil {
 				t.Fatal(err)
 			}
-			got := detectSysInfo("testdata/os-release-rhel-10.1", path)
+			got, err := detectSysInfo("testdata/os-release-rhel-10.1", path)
+			if err != nil {
+				t.Fatal(err)
+			}
 			want := SysInfo{
 				IsRhel:        true,
 				OsVersion:     10,
@@ -43,7 +48,7 @@ func TestDetectSysInfo(t *testing.T) {
 }
 
 func TestDetectSysInfoKernelUnavailable(t *testing.T) {
-	for _, name := range []string{"missing", "invalid"} {
+	for _, name := range []string{"missing", "invalid", "empty", "directory"} {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "osrelease")
 			if name == "invalid" {
@@ -51,10 +56,22 @@ func TestDetectSysInfoKernelUnavailable(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got := detectSysInfo("testdata/os-release-rhel-10.1", path)
-			want := SysInfo{IsRhel: true, OsVersion: 10}
-			if got != want {
-				t.Fatalf("detectSysInfo() = %+v, want %+v", got, want)
+			if name == "empty" {
+				if err := os.WriteFile(path, nil, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if name == "directory" {
+				if err := os.Mkdir(path, 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			got, err := detectSysInfo("testdata/os-release-rhel-10.1", path)
+			if err == nil || !strings.Contains(err.Error(), "unable to detect running kernel") || got != (SysInfo{}) {
+				t.Fatalf("detectSysInfo() = %+v, %v; want empty result and kernel detection error", got, err)
+			}
+			if name == "missing" && !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("expected missing-file error, got %v", err)
 			}
 		})
 	}

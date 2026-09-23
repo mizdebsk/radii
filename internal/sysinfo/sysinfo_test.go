@@ -1,8 +1,64 @@
 package sysinfo
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
+
+func TestDetectSysInfo(t *testing.T) {
+	tests := []struct {
+		arch    string
+		variant string
+	}{
+		{arch: "x86_64"},
+		{arch: "aarch64"},
+		{arch: "aarch64", variant: "64k"},
+		{arch: "ppc64le"},
+		{arch: "s390x"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.arch+"/"+tt.variant, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "osrelease")
+			release := "6.12.0-211.51.1.el10_2." + tt.arch
+			if tt.variant != "" {
+				release += "+" + tt.variant
+			}
+			if err := os.WriteFile(path, []byte(release+"\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			got := detectSysInfo("testdata/os-release-rhel-10.1", path)
+			want := SysInfo{
+				IsRhel:        true,
+				OsVersion:     10,
+				Arch:          tt.arch,
+				KernelVersion: "6.12.0-211.51.1.el10_2",
+				KernelVariant: tt.variant,
+			}
+			if got != want {
+				t.Fatalf("detectSysInfo() = %+v, want %+v", got, want)
+			}
+		})
+	}
+}
+
+func TestDetectSysInfoKernelUnavailable(t *testing.T) {
+	for _, name := range []string{"missing", "invalid"} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "osrelease")
+			if name == "invalid" {
+				if err := os.WriteFile(path, []byte("invalid\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			got := detectSysInfo("testdata/os-release-rhel-10.1", path)
+			want := SysInfo{IsRhel: true, OsVersion: 10}
+			if got != want {
+				t.Fatalf("detectSysInfo() = %+v, want %+v", got, want)
+			}
+		})
+	}
+}
 
 func TestDetectRhelVersion(t *testing.T) {
 

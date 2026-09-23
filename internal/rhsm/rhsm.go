@@ -47,6 +47,9 @@ func (rm *repoMgr) GetRepoIDs(channels []string) ([]string, error) {
 	if !rm.rhsmEnabled || !rm.systemInfo.IsRhel || len(channels) == 0 {
 		return nil, nil
 	}
+	if rm.systemInfo.Arch == "" {
+		return nil, fmt.Errorf("cannot determine RHEL repository IDs: system architecture is unknown")
+	}
 	states, err := readRepoStates(rm.redhatRepoPath)
 	if err != nil {
 		return nil, err
@@ -102,6 +105,9 @@ func (rm *repoMgr) subscriptionManagerPresent() bool {
 }
 
 func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
+	if len(channels) > 0 && rm.systemInfo.Arch == "" {
+		return fmt.Errorf("cannot determine RHEL repository IDs: system architecture is unknown")
+	}
 	log.Logf("checking repository status")
 	states, err := readRepoStates(rm.redhatRepoPath)
 	if err != nil {

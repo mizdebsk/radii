@@ -87,7 +87,7 @@ func TestQueryRepositoriesBypassRHSM(t *testing.T) {
 }
 
 func TestRepositoryReadErrors(t *testing.T) {
-	rm := repoMgr{rhsmEnabled: true, systemInfo: sysinfo.SysInfo{IsRhel: true}, redhatRepoPath: t.TempDir()}
+	rm := repoMgr{rhsmEnabled: true, systemInfo: sysinfo.SysInfo{IsRhel: true, Arch: "x86_64"}, redhatRepoPath: t.TempDir()}
 	_, err := rm.GetRepoIDs([]string{"BaseOS"})
 	var pathErr *os.PathError
 	if !errors.As(err, &pathErr) {

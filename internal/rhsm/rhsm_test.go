@@ -32,7 +32,7 @@ func TestRhsm(t *testing.T) {
 						"--enable", "rhel-5-for-sparc-supplementary-rpms",
 					}).
 					Return(nil)
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func TestRhsm(t *testing.T) {
 						"--enable", "rhel-5-for-sparc-supplementary-rpms",
 					}).
 					Return(fmt.Errorf("hey, you don't have a valid subscription"))
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
 			},
 			expectErr: true,
 		},
@@ -56,7 +56,7 @@ func TestRhsm(t *testing.T) {
 			name:    "ReopsAlreadyEnabled",
 			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"},
 			testFunc: func(t *testing.T) error {
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestRhsm(t *testing.T) {
 			sysInfo: sysinfo.SysInfo{IsRhel: true},
 			testFunc: func(t *testing.T) error {
 				rm.rhsmExecPath = "testdata/rhsm-absent-xxx"
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
 			},
 		},
 		{
@@ -72,13 +72,13 @@ func TestRhsm(t *testing.T) {
 			sysInfo: sysinfo.SysInfo{IsRhel: true},
 			testFunc: func(t *testing.T) error {
 				rm.SetSubscriptionsEnabled(false)
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
 			},
 		},
 		{
 			name: "NonRhelSystem",
 			testFunc: func(t *testing.T) error {
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled([]string{"BaseOS", "AppStream", "Extensions", "Supplementary"})
 			},
 		},
 	}
@@ -99,5 +99,24 @@ func TestRhsm(t *testing.T) {
 				t.Errorf("Expected error: %v, but got: %v", tt.expectErr, err)
 			}
 		})
+	}
+}
+
+func TestEnableProviderChannels(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	executor := mocks.NewMockExecutor(ctrl)
+	rm := repoMgr{
+		rhsmEnabled:    true,
+		systemInfo:     sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"},
+		executor:       executor,
+		redhatRepoPath: "testdata/empty_file.repo",
+		rhsmExecPath:   "testdata/rhsm-exec",
+	}
+	executor.EXPECT().Run(rm.rhsmExecPath, []string{
+		"repos", "--enable", "rhel-10-for-x86_64-baseos-rpms",
+		"--enable", "rhel-10-for-x86_64-thirdchannel-rpms",
+	}).Return(nil)
+	if err := rm.EnsureRepositoriesEnabled([]string{"BaseOS", "ThirdChannel"}); err != nil {
+		t.Fatal(err)
 	}
 }

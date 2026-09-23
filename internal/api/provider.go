@@ -5,6 +5,7 @@ package api
 type Provider interface {
 	GetID() string
 	GetName() string
+	RequiredChannels() []string
 	Install(drivers []DriverID) ([]string, error)
 	Remove(drivers []DriverID) ([]string, error)
 	ListAvailable() ([]DriverID, error)

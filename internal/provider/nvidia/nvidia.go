@@ -27,6 +27,10 @@ func (p *prov) GetName() string {
 	return "NVIDIA"
 }
 
+func (p *prov) RequiredChannels() []string {
+	return []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
+}
+
 func selectPackagesByNameVersion(all []api.PackageInfo, name, version string, latest bool) []string {
 	if latest {
 		var best *api.PackageInfo

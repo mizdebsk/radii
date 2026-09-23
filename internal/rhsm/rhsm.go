@@ -39,7 +39,7 @@ func (rm *repoMgr) SetSubscriptionsEnabled(enabled bool) {
 	rm.rhsmEnabled = enabled
 }
 
-func (rm *repoMgr) EnsureRepositoriesEnabled() error {
+func (rm *repoMgr) EnsureRepositoriesEnabled(channels []string) error {
 	if !rm.rhsmEnabled {
 		log.Warnf("Skipping Red Hat Subscription Manager (RHSM) setup.")
 		log.Warnf("Repositories must already be configured; packages will be installed from existing DNF sources.")
@@ -49,7 +49,6 @@ func (rm *repoMgr) EnsureRepositoriesEnabled() error {
 		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
 		if rm.subscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
-			channels := []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
 			return rm.ensureChannelsEnabled(channels)
 		} else {
 			log.Warnf("Subscription Manager is absent.")

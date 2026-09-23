@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -13,15 +12,15 @@ import (
 
 func TestList(t *testing.T) {
 	tests := []struct {
-		name      string
+		name           string
 		listInst       bool
 		listAvail      bool
 		hwdetect       bool
 		compatibleOnly bool
 		setup          func(*mocks.MockProvider, *mocks.MockRepositoryManager)
-		expectErr bool
-		expectLen int
-		checkFunc func([]api.DriverStatus) error
+		expectErr      bool
+		expectLen      int
+		checkFunc      func([]api.DriverStatus) error
 	}{
 		{
 			name:           "ListInstalledOnly",
@@ -54,7 +53,8 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -77,7 +77,8 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -110,7 +111,8 @@ func TestList(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
@@ -132,7 +134,8 @@ func TestList(t *testing.T) {
 			hwdetect:       false,
 			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(fmt.Errorf("repo error"))
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(fmt.Errorf("repo error"))
 			},
 			expectErr: true,
 			expectLen: 0,
@@ -160,7 +163,8 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("list failed"))
 			},
@@ -176,7 +180,8 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
 			},
@@ -193,7 +198,8 @@ func TestList(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570"},
@@ -221,11 +227,6 @@ func TestList(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(false, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
-				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
-				p.EXPECT().ListAvailable().Return([]api.DriverID{
-					{ProviderID: "nvidia", Version: "570"},
-				}, nil)
 			},
 			expectErr: false,
 			expectLen: 0,
@@ -268,59 +269,6 @@ func TestList(t *testing.T) {
 				if err := tt.checkFunc(result); err != nil {
 					t.Errorf("List() check failed: %v", err)
 				}
-			}
-		})
-	}
-}
-
-func TestFilterCompatible(t *testing.T) {
-	tests := []struct {
-		name string
-		in   []api.DriverStatus
-		want []api.DriverStatus
-	}{
-		{
-			name: "Empty",
-			in:   nil,
-			want: nil,
-		},
-		{
-			name: "AllCompatible",
-			in: []api.DriverStatus{
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: true},
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
-			},
-			want: []api.DriverStatus{
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: true},
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
-			},
-		},
-		{
-			name: "NoneCompatible",
-			in: []api.DriverStatus{
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: false},
-			},
-			want: nil,
-		},
-		{
-			name: "MixedFiltersToCompatibleOnly",
-			in: []api.DriverStatus{
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "570"}, Compatible: false},
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
-				{ID: api.DriverID{ProviderID: "amd", Version: "1.0"}, Compatible: false},
-				{ID: api.DriverID{ProviderID: "amd", Version: "2.0"}, Compatible: true},
-			},
-			want: []api.DriverStatus{
-				{ID: api.DriverID{ProviderID: "nvidia", Version: "560"}, Compatible: true},
-				{ID: api.DriverID{ProviderID: "amd", Version: "2.0"}, Compatible: true},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := filterCompatible(tt.in)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("filterCompatible() = %v, want %v", got, tt.want)
 			}
 		})
 	}

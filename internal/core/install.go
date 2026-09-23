@@ -81,7 +81,8 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 }
 
 func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool) error {
-	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
+	providers := providersForDrivers(deps.Providers, toInstall)
+	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(requiredChannels(providers)); err != nil {
 		return fmt.Errorf("failed to verify/enable repositories: %w", err)
 	}
 	var allPkgs []string

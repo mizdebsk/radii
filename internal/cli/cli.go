@@ -76,6 +76,7 @@ func runInstall(args []string, deps api.CoreDeps) error {
 		batchMode  bool
 		dryRun     bool
 		force      bool
+		kernel     api.KernelOptions
 	)
 
 	fs := flag.NewFlagSet("install", flag.ContinueOnError)
@@ -84,6 +85,12 @@ func runInstall(args []string, deps api.CoreDeps) error {
 	fs.BoolVar(&batchMode, "batch", false, "")
 	fs.BoolVar(&dryRun, "dry-run", false, "")
 	fs.BoolVar(&force, "force", false, "")
+	fs.StringVar(&kernel.Version, "kernel", "", "")
+	fs.StringVar(&kernel.Version, "K", "", "")
+	fs.Func("kernel-variant", "", func(value string) error {
+		kernel.Variant = &value
+		return nil
+	})
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -94,14 +101,14 @@ func runInstall(args []string, deps api.CoreDeps) error {
 		if len(drivers) > 0 {
 			return fmt.Errorf("both --auto-detect and specific drivers given")
 		}
-		return core.InstallAutoDetect(deps, batchMode, dryRun, force, api.KernelOptions{})
+		return core.InstallAutoDetect(deps, batchMode, dryRun, force, kernel)
 	}
 
 	if len(drivers) == 0 {
 		return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
 	}
 
-	return core.InstallSpecific(deps, drivers, batchMode, dryRun, force, api.KernelOptions{})
+	return core.InstallSpecific(deps, drivers, batchMode, dryRun, force, kernel)
 }
 
 func runRemove(args []string, deps api.CoreDeps) error {

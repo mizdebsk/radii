@@ -23,8 +23,8 @@ Options:
 
 func printInstallUsage() {
 	fmt.Printf(`Usage:
-  %s install --auto-detect [--force]
-  %s install <vendor[:version]>...
+  %s install [options] --auto-detect
+  %s install [options] <vendor[:version]>...
 
 Install driver stacks.
 Either specify drivers explicitly, or use --auto-detect to install
@@ -33,11 +33,17 @@ Installing drivers from multiple providers may cause conflicts.
 For multiple providers, choose drivers explicitly or add --force to install all.
 
 Options:
-  --auto-detect   Select drivers automatically (exclusive with arguments)
-  --batch         Run non-interactively
-  --dry-run       Preview without changing packages or repository configuration
-  --force         Install even if detection does not match hardware
-                  With --auto-detect, install drivers for all detected providers
+  --auto-detect              Select drivers automatically (exclusive with arguments)
+  --batch                    Run non-interactively
+  --dry-run                  Preview without changing packages or repository configuration
+  --force                    Install even if detection does not match hardware
+                             With --auto-detect, install drivers for all detected providers
+  -K, --kernel RELEASE       Target a specific kernel version-release[.arch][+variant]
+  --kernel-variant VARIANT   Select default (also 4k or empty) or 64k
+
+NVIDIA defaults to the running kernel variant and the latest matching kernel.
+A variant embedded in --kernel overrides the running variant.
+AMD ignores the variant and does not support --kernel.
 `, progName, progName)
 }
 

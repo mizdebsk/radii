@@ -277,26 +277,28 @@ func TestInstallAutoDetect(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		for _, force := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/force=%t", tt.name, force), func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			mockProvider := mocks.NewMockProvider(ctrl)
-			mockPM := mocks.NewMockPackageManager(ctrl)
-			mockRM := mocks.NewMockRepositoryManager(ctrl)
+				mockProvider := mocks.NewMockProvider(ctrl)
+				mockPM := mocks.NewMockPackageManager(ctrl)
+				mockRM := mocks.NewMockRepositoryManager(ctrl)
 
-			tt.setup(mockProvider, mockPM, mockRM)
+				tt.setup(mockProvider, mockPM, mockRM)
 
-			deps := api.CoreDeps{
-				PackageManager:    mockPM,
-				RepositoryManager: mockRM,
-				Providers:         []api.Provider{mockProvider},
-			}
+				deps := api.CoreDeps{
+					PackageManager:    mockPM,
+					RepositoryManager: mockRM,
+					Providers:         []api.Provider{mockProvider},
+				}
 
-			err := InstallAutoDetect(deps, false, false)
-			if (err != nil) != tt.expectErr {
-				t.Errorf("InstallAutoDetect() error = %v, expectErr %v", err, tt.expectErr)
-			}
-		})
+				err := InstallAutoDetect(deps, false, false, force)
+				if (err != nil) != tt.expectErr {
+					t.Errorf("InstallAutoDetect() error = %v, expectErr %v", err, tt.expectErr)
+				}
+			})
+		}
 	}
 }

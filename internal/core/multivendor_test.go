@@ -25,11 +25,11 @@ func TestAutoDetectRejectsMultipleProvidersBeforePreparation(t *testing.T) {
 						p.EXPECT().DetectHardware().Return(true, nil)
 						deps.Providers = append(deps.Providers, p)
 					}
-					err := InstallAutoDetect(deps, batch, dryRun)
+					err := InstallAutoDetect(deps, batch, dryRun, false)
 					if err == nil {
 						t.Fatal("expected ambiguous auto-detection to fail")
 					}
-					for _, fragment := range append(ids, "radii install <vendor>:<version>", "radii list --compatible") {
+					for _, fragment := range append(ids, "radii install <vendor>:<version>", "radii list --compatible", "radii install --auto-detect --force") {
 						if !strings.Contains(err.Error(), fragment) {
 							t.Errorf("error %q does not contain %q", err, fragment)
 						}

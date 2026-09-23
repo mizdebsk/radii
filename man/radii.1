@@ -8,6 +8,7 @@
 .Nm
 .Cm install
 .Fl -auto-detect
+.Op Fl -force
 .Nm
 .Cm install
 .Ar vendor Ns Oo : Ns Ar version Oc ...
@@ -171,11 +172,10 @@ Print program version and exit.
 .Ss Install Options
 .Bl -tag -width "--dry-run"
 .It Fl -auto-detect
-Automatically select a driver stack for detected hardware.
+Automatically select driver stacks for detected hardware.
 Driver stacks from different providers may conflict.
-Requires exactly one detected hardware provider.
-If multiple providers are detected, the command fails without making changes;
-specify one or more drivers explicitly instead.
+If multiple providers are detected, specify drivers explicitly or use
+.Fl -force .
 Must not be combined with explicit driver arguments.
 .It Fl -batch
 Run non-interactively, assuming confirmation where required.
@@ -188,6 +188,9 @@ DNF may refresh its metadata cache.
 .It Fl -force
 Proceed even if no compatible hardware was detected for the selected
 driver stack, or other validation checks report potential issues.
+With
+.Fl -auto-detect ,
+allow installing drivers for all detected providers.
 .El
 .Ss Remove Options
 .Bl -tag -width "--dry-run"
@@ -216,6 +219,9 @@ Only list compatible drivers.
 .Sh EXAMPLES
 Install drivers for detected hardware:
 .Dl Nm Li install --auto-detect
+.Pp
+Install drivers for all detected providers:
+.Dl Nm Li install --auto-detect --force
 .Pp
 Install the default version of NVIDIA driver:
 .Dl Nm Li install nvidia

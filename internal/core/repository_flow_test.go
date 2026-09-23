@@ -73,7 +73,7 @@ func TestAutoDetectPreparesRepositoriesAfterDetection(t *testing.T) {
 	selected.EXPECT().Install([]api.DriverID{{ProviderID: "third", Version: "1"}}).After(available).Return([]string{"third-pkg"}, nil)
 	pm.EXPECT().Install([]string{"third-pkg"}, false, false).Return(nil)
 	deps := api.CoreDeps{Providers: []api.Provider{selected, absent}, RepositoryManager: rm, PackageManager: pm}
-	if err := InstallAutoDetect(deps, false, false); err != nil {
+	if err := InstallAutoDetect(deps, false, false, false); err != nil {
 		t.Fatal(err)
 	}
 }

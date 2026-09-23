@@ -6,6 +6,7 @@ import (
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/log"
+	"github.com/mizdebsk/radii/internal/rpmver"
 )
 
 func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, force bool, options api.KernelOptions) error {
@@ -20,6 +21,9 @@ func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, for
 
 	var requested []api.DriverID
 	for _, driverStr := range drivers {
+		if driverStr != "" && !strings.Contains(driverStr, ":") {
+			driverStr += ":default"
+		}
 		driver, _, err := resolveDriver(deps, driverStr)
 		if err != nil {
 			return err
@@ -40,6 +44,20 @@ outer:
 		available, err := provider.ListAvailable()
 		if err != nil {
 			return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
+		}
+		if driver.Version == "default" || driver.Version == "latest" {
+			if len(available) == 0 {
+				return fmt.Errorf("no %s drivers available", provider.GetName())
+			}
+			latest := driver.Version == "latest"
+			driver = available[0]
+			if latest {
+				for _, candidate := range available[1:] {
+					if rpmver.RpmVersionCompare(candidate.Version, driver.Version) > 0 {
+						driver = candidate
+					}
+				}
+			}
 		}
 		for _, avail := range available {
 			if avail.Version == driver.Version {

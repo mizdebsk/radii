@@ -75,15 +75,17 @@ The
 option allows installation to proceed even if the detected hardware
 does not appear to match the requested driver.
 .Pp
-Each driver stack is selected by a vendor identifier with an optional
-version qualifier:
+For installation, each driver stack is selected by a vendor identifier
+with an optional version qualifier:
 .Bl -bullet
 .It
 .Ar vendor
-selects the default version defined by the repositories.
+selects the provider's default version, equivalent to
+.Ar vendor : Ns Cm default .
 The default
 is chosen to provide a stable, consistent selection and is not
 necessarily the newest available version.
+NVIDIA currently defaults to the newest available version.
 .It
 .Ar vendor : Ns Ar version
 selects the specified version of the driver stack.
@@ -120,6 +122,8 @@ Specify drivers explicitly, or use
 for automatic selection.
 .It Cm remove
 Remove installed driver stacks.
+Omitting the version removes all installed versions for the specified
+vendor, including their NVIDIA kernel modules where applicable.
 Either explicitly specified drivers,
 or all managed drivers if
 .Fl -all
@@ -282,8 +286,10 @@ Install a specific NVIDIA driver for a specific 64k kernel:
 Install multiple driver stacks:
 .Dl Nm Li install nvidia amdgpu:latest
 .Pp
-Remove a specific driver:
+Remove all installed NVIDIA driver versions:
 .Dl Nm Li remove nvidia
+.Pp
+Remove a specific driver version:
 .Dl Nm Li remove nvidia:590.44.01
 .Pp
 Remove all managed drivers:

@@ -47,6 +47,9 @@ func (rm *repoMgr) GetRepoIDs(channels []string) ([]string, error) {
 	if !rm.rhsmEnabled || !rm.systemInfo.IsRhel || len(channels) == 0 {
 		return nil, nil
 	}
+	if !rm.subscriptionManagerPresent() {
+		return nil, nil
+	}
 	states, err := readRepoStates(rm.redhatRepoPath)
 	if err != nil {
 		return nil, err

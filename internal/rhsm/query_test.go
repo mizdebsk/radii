@@ -40,7 +40,7 @@ func TestQueryRepositories(t *testing.T) {
 				}
 			}
 			rm := repoMgr{rhsmEnabled: true, systemInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"}, redhatRepoPath: path,
-				executor: mocks.NewMockExecutor(gomock.NewController(t)), rhsmExecPath: "absent-subscription-manager"}
+				executor: mocks.NewMockExecutor(gomock.NewController(t)), rhsmExecPath: "testdata/rhsm-exec"}
 			got, err := rm.GetRepoIDs(tt.channels)
 			if len(tt.missing) > 0 {
 				if err == nil {
@@ -86,8 +86,33 @@ func TestQueryRepositoriesBypassRHSM(t *testing.T) {
 	}
 }
 
+func TestQueryRepositoriesWithoutSubscriptionManager(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		path string
+	}{
+		{"missing repositories", filepath.Join(t.TempDir(), "redhat.repo")},
+		{"existing repositories", "testdata/rhel10.repo"},
+		{"unreadable repositories", t.TempDir()},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			rm := repoMgr{
+				rhsmEnabled:    true,
+				systemInfo:     sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"},
+				redhatRepoPath: tt.path,
+				rhsmExecPath:   filepath.Join(t.TempDir(), "subscription-manager"),
+				executor:       mocks.NewMockExecutor(gomock.NewController(t)),
+			}
+			repos, err := rm.GetRepoIDs([]string{"BaseOS", "AppStream"})
+			if err != nil || len(repos) != 0 {
+				t.Fatalf("GetRepoIDs() = %v, %v; want no repository overrides and no error", repos, err)
+			}
+		})
+	}
+}
+
 func TestRepositoryReadErrors(t *testing.T) {
-	rm := repoMgr{rhsmEnabled: true, systemInfo: sysinfo.SysInfo{IsRhel: true, Arch: "x86_64"}, redhatRepoPath: t.TempDir()}
+	rm := repoMgr{rhsmEnabled: true, systemInfo: sysinfo.SysInfo{IsRhel: true, Arch: "x86_64"}, redhatRepoPath: t.TempDir(), rhsmExecPath: "testdata/rhsm-exec"}
 	_, err := rm.GetRepoIDs([]string{"BaseOS"})
 	var pathErr *os.PathError
 	if !errors.As(err, &pathErr) {

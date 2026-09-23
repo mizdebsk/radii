@@ -23,20 +23,21 @@ Options:
 
 func printInstallUsage() {
 	fmt.Printf(`Usage:
-  %s install --auto-detect
+  %s install --auto-detect [--force]
   %s install <vendor[:version]>...
 
 Install driver stacks.
 Either specify drivers explicitly, or use --auto-detect to install
 the default drivers for hardware detected in the system.
 Installing drivers from multiple providers may cause conflicts.
-If multiple hardware providers are detected, choose drivers explicitly.
+For multiple providers, choose drivers explicitly or add --force to install all.
 
 Options:
   --auto-detect   Select drivers automatically (exclusive with arguments)
   --batch         Run non-interactively
   --dry-run       Preview without changing packages or repository configuration
   --force         Install even if detection does not match hardware
+                  With --auto-detect, install drivers for all detected providers
 `, progName, progName)
 }
 

@@ -94,10 +94,7 @@ func runInstall(args []string, deps api.CoreDeps) error {
 		if len(drivers) > 0 {
 			return fmt.Errorf("both --auto-detect and specific drivers given")
 		}
-		if force {
-			return fmt.Errorf("both --auto-detect and --force were specified")
-		}
-		return core.InstallAutoDetect(deps, batchMode, dryRun)
+		return core.InstallAutoDetect(deps, batchMode, dryRun, force)
 	}
 
 	if len(drivers) == 0 {

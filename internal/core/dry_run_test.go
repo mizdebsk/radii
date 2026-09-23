@@ -40,7 +40,7 @@ func TestDryRunUsesQueryRepositories(t *testing.T) {
 					deps := api.CoreDeps{Providers: []api.Provider{p}, RepositoryManager: rm, PackageManager: pm}
 					var err error
 					if auto {
-						err = InstallAutoDetect(deps, batch, true)
+						err = InstallAutoDetect(deps, batch, true, false)
 					} else {
 						err = InstallSpecific(deps, []string{"amdgpu:latest"}, batch, true, true)
 					}

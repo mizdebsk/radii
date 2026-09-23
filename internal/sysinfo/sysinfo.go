@@ -26,17 +26,20 @@ type SysInfo struct {
 	CloudProvider string
 }
 
-func DetectSysInfo() SysInfo {
-	info := detectSysInfo(osReleasePath, kernelReleasePath)
+func DetectSysInfo() (SysInfo, error) {
+	info, err := detectSysInfo(osReleasePath, kernelReleasePath)
+	if err != nil {
+		return SysInfo{}, err
+	}
 	info.CloudProvider = detectCloudProvider(cloudInfoPath)
-	return info
+	return info, nil
 }
 
-func detectSysInfo(osPath, kernelPath string) SysInfo {
+func detectSysInfo(osPath, kernelPath string) (SysInfo, error) {
 	isRhel, osVersion := detectOs(osPath)
 	kernel, err := detectKernel(kernelPath)
 	if err != nil {
-		log.Warnf("unable to detect running kernel: %v", err)
+		return SysInfo{}, fmt.Errorf("unable to detect running kernel: %w", err)
 	}
 	return SysInfo{
 		IsRhel:        isRhel,
@@ -44,7 +47,7 @@ func detectSysInfo(osPath, kernelPath string) SysInfo {
 		Arch:          kernel.arch,
 		KernelVersion: kernel.version,
 		KernelVariant: kernel.variant,
-	}
+	}, nil
 }
 
 type kernelInfo struct {

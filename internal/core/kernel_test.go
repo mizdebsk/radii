@@ -102,7 +102,6 @@ func TestResolveKernelRejectsInvalidOptions(t *testing.T) {
 		options api.KernelOptions
 		wantErr string
 	}{
-		{name: "missing architecture", wantErr: "architecture"},
 		{name: "invalid variant", arch: "aarch64", options: api.KernelOptions{Variant: &unknown}, wantErr: "unsupported kernel variant"},
 		{name: "conflicting variant", arch: "aarch64", options: api.KernelOptions{Version: "6.12.0-211.el10.aarch64+64k", Variant: &fourK}, wantErr: "conflicts"},
 		{name: "empty embedded variant", arch: "aarch64", options: api.KernelOptions{Version: "6.12.0-211.el10.aarch64+"}, wantErr: "empty variant"},

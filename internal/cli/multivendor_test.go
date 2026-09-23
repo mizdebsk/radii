@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/mocks"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 func TestAutoDetectForce(t *testing.T) {
@@ -21,7 +22,7 @@ func TestAutoDetectForce(t *testing.T) {
 					nv := mocks.NewMockProvider(ctrl)
 					am := mocks.NewMockProvider(ctrl)
 					absent := mocks.NewMockProvider(ctrl)
-					deps := api.CoreDeps{RepositoryManager: rm, PackageManager: pm, Providers: []api.Provider{nv, am, absent}}
+					deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, RepositoryManager: rm, PackageManager: pm, Providers: []api.Provider{nv, am, absent}}
 					var detections []*gomock.Call
 					for i, p := range []*mocks.MockProvider{nv, am, absent} {
 						id := []string{"nvidia", "amdgpu", "absent"}[i]
@@ -58,7 +59,7 @@ func TestAutoDetectForce(t *testing.T) {
 							id := []string{"nvidia", "amdgpu"}[i]
 							driver := api.DriverID{ProviderID: id, Version: "default"}
 							listed := p.EXPECT().ListAvailable().After(configured).Return([]api.DriverID{driver, {ProviderID: id, Version: "older"}}, nil)
-							installed := p.EXPECT().Install([]api.DriverID{driver}).After(listed).Return([]string{id + "-pkg"}, nil)
+							installed := p.EXPECT().Install([]api.DriverID{driver}, api.KernelTarget{Arch: "x86_64"}).After(listed).Return([]string{id + "-pkg"}, nil)
 							transaction.After(installed)
 						}
 					}
@@ -77,7 +78,7 @@ func TestAutoDetectForce(t *testing.T) {
 }
 
 func TestAutoDetectForceRejectsExplicitDrivers(t *testing.T) {
-	err := Execute([]string{"radii", "install", "--auto-detect", "--force", "amdgpu:latest"}, api.CoreDeps{}, "test")
+	err := Execute([]string{"radii", "install", "--auto-detect", "--force", "amdgpu:latest"}, api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}}, "test")
 	if err == nil || !strings.Contains(err.Error(), "both --auto-detect and specific drivers given") {
 		t.Fatalf("expected incompatible arguments error, got %v", err)
 	}

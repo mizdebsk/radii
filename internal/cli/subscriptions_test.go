@@ -34,10 +34,10 @@ func TestSkipSubscriptionsUsesExistingSources(t *testing.T) {
 					args = append(args, "--dry-run")
 				}
 				args = append(args, "amdgpu:latest")
-				p.EXPECT().Install(drivers).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
+				p.EXPECT().Install(drivers, api.KernelTarget{Arch: "x86_64"}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
 				pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, false, command == "dry-run").Return(nil)
 			}
-			deps := api.CoreDeps{Providers: []api.Provider{p}, PackageManager: pm,
+			deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: []api.Provider{p}, PackageManager: pm,
 				RepositoryManager: rhsm.NewRepositoryManager(executor, sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"})}
 			if err := Execute(args, deps, "test"); err != nil {
 				t.Fatal(err)

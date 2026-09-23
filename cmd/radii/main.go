@@ -27,6 +27,7 @@ func main() {
 	repositoryManager := rhsm.NewRepositoryManager(executor, systemInfo)
 	providers := []api.Provider{nvidia.NewProvider(packageManager), amd.NewProvider(packageManager)}
 	deps := api.CoreDeps{
+		SystemInfo:        systemInfo,
 		PackageManager:    packageManager,
 		RepositoryManager: repositoryManager,
 		Providers:         providers,

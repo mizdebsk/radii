@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/mocks"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 func TestDryRunUsesQueryRepositories(t *testing.T) {
@@ -34,15 +35,15 @@ func TestDryRunUsesQueryRepositories(t *testing.T) {
 						configured := pm.EXPECT().SetEnableRepos([]string{"base-repo", "extensions-repo"}).After(query)
 						drivers := []api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}
 						listed := p.EXPECT().ListAvailable().After(configured).Return(drivers, nil)
-						installed := p.EXPECT().Install(drivers).After(listed).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
+						installed := p.EXPECT().Install(drivers, api.KernelTarget{Arch: "x86_64"}).After(listed).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
 						pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, batch, true).After(installed).Return(nil)
 					}
-					deps := api.CoreDeps{Providers: []api.Provider{p}, RepositoryManager: rm, PackageManager: pm}
+					deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: []api.Provider{p}, RepositoryManager: rm, PackageManager: pm}
 					var err error
 					if auto {
-						err = InstallAutoDetect(deps, batch, true, false)
+						err = InstallAutoDetect(deps, batch, true, false, api.KernelOptions{})
 					} else {
-						err = InstallSpecific(deps, []string{"amdgpu:latest"}, batch, true, true)
+						err = InstallSpecific(deps, []string{"amdgpu:latest"}, batch, true, true, api.KernelOptions{})
 					}
 					if missing {
 						if !errors.Is(err, missingErr) {

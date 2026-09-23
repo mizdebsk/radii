@@ -70,9 +70,12 @@ func validateDrivers(drivers []api.DriverID, providerName string) error {
 	return nil
 }
 
-func (p *prov) Install(drivers []api.DriverID) ([]string, error) {
+func (p *prov) Install(drivers []api.DriverID, kernel api.KernelTarget) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
+	}
+	if kernel.Version != "" {
+		return nil, fmt.Errorf("AMD GPU drivers do not support selecting a specific kernel version")
 	}
 	if err := validateDrivers(drivers, p.GetName()); err != nil {
 		return nil, err

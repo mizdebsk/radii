@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/mocks"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 func TestAutoDetectRejectsMultipleProvidersBeforePreparation(t *testing.T) {
@@ -16,7 +17,7 @@ func TestAutoDetectRejectsMultipleProvidersBeforePreparation(t *testing.T) {
 			for _, dryRun := range []bool{false, true} {
 				t.Run(fmt.Sprintf("providers=%d/batch=%t/dry=%t", count, batch, dryRun), func(t *testing.T) {
 					ctrl := gomock.NewController(t)
-					deps := api.CoreDeps{RepositoryManager: mocks.NewMockRepositoryManager(ctrl), PackageManager: mocks.NewMockPackageManager(ctrl)}
+					deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, RepositoryManager: mocks.NewMockRepositoryManager(ctrl), PackageManager: mocks.NewMockPackageManager(ctrl)}
 					ids := []string{"nvidia", "amdgpu", "third"}[:count]
 					for _, id := range ids {
 						p := mocks.NewMockProvider(ctrl)
@@ -25,7 +26,7 @@ func TestAutoDetectRejectsMultipleProvidersBeforePreparation(t *testing.T) {
 						p.EXPECT().DetectHardware().Return(true, nil)
 						deps.Providers = append(deps.Providers, p)
 					}
-					err := InstallAutoDetect(deps, batch, dryRun, false)
+					err := InstallAutoDetect(deps, batch, dryRun, false, api.KernelOptions{})
 					if err == nil {
 						t.Fatal("expected ambiguous auto-detection to fail")
 					}

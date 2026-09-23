@@ -8,9 +8,14 @@ import (
 	"github.com/mizdebsk/radii/internal/log"
 )
 
-func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, force bool) error {
+func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, force bool, options api.KernelOptions) error {
 	if len(drivers) == 0 {
 		return fmt.Errorf("not specified what to install")
+	}
+
+	kernel, err := resolveKernel(deps.SystemInfo, options)
+	if err != nil {
+		return err
 	}
 
 	var requested []api.DriverID
@@ -57,10 +62,14 @@ outer:
 		return fmt.Errorf("%s driver version %s is NOT available", provider.GetName(), driver.Version)
 	}
 
-	return doInstall(deps, toInstall, batchMode, dryRun)
+	return doInstall(deps, toInstall, batchMode, dryRun, kernel)
 }
 
-func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun, force bool) error {
+func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun, force bool, options api.KernelOptions) error {
+	kernel, err := resolveKernel(deps.SystemInfo, options)
+	if err != nil {
+		return err
+	}
 	var detectedProviders []api.Provider
 	for _, provider := range deps.Providers {
 		detected, err := provider.DetectHardware()
@@ -100,10 +109,10 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun, force bool) error {
 		return fmt.Errorf("no drivers available for detected hardware")
 	}
 
-	return doInstall(deps, toInstall, batchMode, dryRun)
+	return doInstall(deps, toInstall, batchMode, dryRun, kernel)
 }
 
-func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool) error {
+func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool, kernel api.KernelTarget) error {
 	var allPkgs []string
 	for _, provider := range deps.Providers {
 		provID := provider.GetID()
@@ -114,7 +123,7 @@ func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bo
 			}
 		}
 		if len(provToInstall) != 0 {
-			pkgs, err := provider.Install(provToInstall)
+			pkgs, err := provider.Install(provToInstall, kernel)
 			if err != nil {
 				return fmt.Errorf("failed to install %s drivers: %w", provider.GetName(), err)
 			}

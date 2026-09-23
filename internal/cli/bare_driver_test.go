@@ -78,6 +78,7 @@ func TestInstallAliasesWithoutAvailableDrivers(t *testing.T) {
 			rm := mocks.NewMockRepositoryManager(ctrl)
 			provider.EXPECT().GetID().Return("nvidia").AnyTimes()
 			provider.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+			provider.EXPECT().DetectHardware().Return(true, nil)
 			provider.EXPECT().RequiredChannels().Return(nil)
 			rm.EXPECT().GetRepoIDs(gomock.Any()).Return(nil, nil)
 			pm.EXPECT().SetEnableRepos(gomock.Nil())

@@ -105,3 +105,72 @@ func TestCompatibleListDetectionFailureNeedsNoRepositories(t *testing.T) {
 		t.Fatalf("List() = %v, %v", result, err)
 	}
 }
+
+func TestExplicitInstallRejectsHardwareBeforeRepositorySetup(t *testing.T) {
+	for _, dryRun := range []bool{false, true} {
+		name := "install"
+		if dryRun {
+			name = "dry run"
+		}
+		t.Run(name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			nv := mocks.NewMockProvider(ctrl)
+			am := mocks.NewMockProvider(ctrl)
+			nv.EXPECT().GetID().Return("nvidia").AnyTimes()
+			am.EXPECT().GetID().Return("amdgpu").AnyTimes()
+			nv.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+			am.EXPECT().GetName().Return("AMD GPU").AnyTimes()
+			nv.EXPECT().DetectHardware().Return(true, nil)
+			am.EXPECT().DetectHardware().Return(false, nil)
+			deps := api.CoreDeps{
+				SystemInfo:        sysinfo.SysInfo{Arch: "x86_64"},
+				Providers:         []api.Provider{nv, am},
+				RepositoryManager: mocks.NewMockRepositoryManager(ctrl),
+				PackageManager:    mocks.NewMockPackageManager(ctrl),
+			}
+			err := InstallSpecific(deps, []string{"nvidia", "amdgpu"}, false, dryRun, false, api.KernelOptions{})
+			if err == nil || err.Error() != "no compatible AMD GPU hardware found" {
+				t.Fatalf("error = %v, want incompatible AMD hardware error", err)
+			}
+		})
+	}
+}
+
+func TestExplicitInstallDetectsProviderBeforeRepositories(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		force     bool
+		detectErr error
+	}{
+		{name: "compatible"},
+		{name: "detection error", detectErr: errors.New("detection failed")},
+		{name: "forced", force: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			provider := mocks.NewMockProvider(ctrl)
+			rm := mocks.NewMockRepositoryManager(ctrl)
+			pm := mocks.NewMockPackageManager(ctrl)
+			provider.EXPECT().GetID().Return("nvidia").AnyTimes()
+			provider.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+			channels := provider.EXPECT().RequiredChannels().Return([]string{"BaseOS"})
+			if !tt.force {
+				detected := provider.EXPECT().DetectHardware().Return(tt.detectErr == nil, tt.detectErr)
+				channels.After(detected)
+			}
+			prepared := rm.EXPECT().EnsureRepositoriesEnabled([]string{"BaseOS"}).After(channels).Return(nil)
+			configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(prepared)
+			drivers := []api.DriverID{{ProviderID: "nvidia", Version: "580.100"}, {ProviderID: "nvidia", Version: "580.9"}}
+			provider.EXPECT().ListAvailable().After(configured).Return(drivers, nil).Times(2)
+			provider.EXPECT().Install(drivers, api.KernelTarget{Arch: "x86_64"}).Return([]string{"selected-packages"}, nil)
+			pm.EXPECT().Install([]string{"selected-packages"}, false, false).Return(nil)
+			deps := api.CoreDeps{
+				SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: []api.Provider{provider},
+				RepositoryManager: rm, PackageManager: pm,
+			}
+			if err := InstallSpecific(deps, []string{"nvidia:580.100", "nvidia:580.9"}, false, false, tt.force, api.KernelOptions{}); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}

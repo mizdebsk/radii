@@ -31,6 +31,20 @@ func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, for
 		requested = append(requested, driver)
 	}
 	providers := providersForDrivers(deps.Providers, requested)
+	for _, provider := range providers {
+		if !force {
+			compat, err := provider.DetectHardware()
+			if err != nil {
+				log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
+			} else if !compat {
+				return fmt.Errorf("no compatible %s hardware found", provider.GetName())
+			} else {
+				log.Infof("compatible hardware %s found", provider.GetName())
+			}
+		} else {
+			log.Infof("not checking for %s hardware compatibility in force mode", provider.GetName())
+		}
+	}
 	if err := prepareRepositories(deps, providers, dryRun); err != nil {
 		return err
 	}
@@ -61,18 +75,6 @@ outer:
 		}
 		for _, avail := range available {
 			if avail.Version == driver.Version {
-				if !force {
-					compat, err := provider.DetectHardware()
-					if err != nil {
-						log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
-					} else if !compat {
-						return fmt.Errorf("no compatible %s hardware found", provider.GetName())
-					} else {
-						log.Infof("compatible hardware %s found", provider.GetName())
-					}
-				} else {
-					log.Infof("not checking for %s hardware compatibility in force mode", provider.GetName())
-				}
 				toInstall = append(toInstall, driver)
 				continue outer
 			}

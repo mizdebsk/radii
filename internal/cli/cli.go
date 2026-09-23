@@ -92,6 +92,10 @@ func runInstall(args []string, deps api.CoreDeps) error {
 		return nil
 	})
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			printInstallUsage()
+			return nil
+		}
 		return err
 	}
 

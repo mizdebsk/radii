@@ -39,7 +39,36 @@ func (rm *repoMgr) SetSubscriptionsEnabled(enabled bool) {
 	rm.rhsmEnabled = enabled
 }
 
+func (rm *repoMgr) repoIDForChannel(channel string) string {
+	return fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
+}
+
+func (rm *repoMgr) GetRepoIDs(channels []string) ([]string, error) {
+	if !rm.rhsmEnabled || !rm.systemInfo.IsRhel || len(channels) == 0 {
+		return nil, nil
+	}
+	states, err := readRepoStates(rm.redhatRepoPath)
+	if err != nil {
+		return nil, err
+	}
+	var repos, missing []string
+	for _, channel := range channels {
+		repo := rm.repoIDForChannel(channel)
+		repos = append(repos, repo)
+		if _, defined := states[repo]; !defined {
+			missing = append(missing, repo)
+		}
+	}
+	if len(missing) > 0 {
+		return nil, fmt.Errorf("required RHEL repository definitions are missing from %s: %s; ensure the system is registered and subscribed (see https://access.redhat.com/solutions/253273), or use --skip-subscriptions before the command to use already-configured DNF repositories", rm.redhatRepoPath, strings.Join(missing, ", "))
+	}
+	return repos, nil
+}
+
 func (rm *repoMgr) EnsureRepositoriesEnabled(channels []string) error {
+	if len(channels) == 0 {
+		return nil
+	}
 	if !rm.rhsmEnabled {
 		log.Warnf("Skipping Red Hat Subscription Manager (RHSM) setup.")
 		log.Warnf("Repositories must already be configured; packages will be installed from existing DNF sources.")
@@ -73,12 +102,16 @@ func (rm *repoMgr) subscriptionManagerPresent() bool {
 
 func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	log.Logf("checking repository status")
+	states, err := readRepoStates(rm.redhatRepoPath)
+	if err != nil {
+		return err
+	}
 	allEnabled := true
 	args := []string{"repos"}
 	for _, channel := range channels {
-		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
+		repo := rm.repoIDForChannel(channel)
 		log.Logf("mapped RHEL channel %s to repo ID %s", channel, repo)
-		if !repoEnabled(rm.redhatRepoPath, repo) {
+		if !states[repo] {
 			log.Infof("enabling channel %s, repository %s", channel, repo)
 			args = append(args, "--enable", repo)
 			allEnabled = false
@@ -93,7 +126,7 @@ func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	}
 
 	log.Logf("running subscription-manager to enable repositories")
-	err := rm.executor.Run(rm.rhsmExecPath, args)
+	err = rm.executor.Run(rm.rhsmExecPath, args)
 	if err != nil {
 		return getDetailedSubscriptionError(err, rm.systemInfo)
 	}

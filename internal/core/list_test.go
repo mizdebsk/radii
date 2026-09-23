@@ -17,7 +17,7 @@ func TestList(t *testing.T) {
 		listAvail      bool
 		hwdetect       bool
 		compatibleOnly bool
-		setup          func(*mocks.MockProvider, *mocks.MockRepositoryManager)
+		setup          func(*mocks.MockProvider, *mocks.MockPackageManager, *mocks.MockRepositoryManager)
 		expectErr      bool
 		expectLen      int
 		checkFunc      func([]api.DriverStatus) error
@@ -28,7 +28,7 @@ func TestList(t *testing.T) {
 			listAvail:      false,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().ListInstalled().Return([]api.DriverID{
@@ -50,11 +50,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return([]string{"test-repo"}, nil)
+				pm.EXPECT().SetEnableRepos([]string{"test-repo"})
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -74,11 +75,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return([]string{"test-repo"}, nil)
+				pm.EXPECT().SetEnableRepos([]string{"test-repo"})
 				p.EXPECT().ListInstalled().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -107,12 +109,13 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       true,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return([]string{"test-repo"}, nil)
+				pm.EXPECT().SetEnableRepos([]string{"test-repo"})
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
@@ -128,14 +131,14 @@ func TestList(t *testing.T) {
 			},
 		},
 		{
-			name:           "RepositoryEnableFails",
+			name:           "QueryRepositoriesFail",
 			listInst:       false,
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(fmt.Errorf("repo error"))
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, fmt.Errorf("repo error"))
 			},
 			expectErr: true,
 			expectLen: 0,
@@ -146,7 +149,7 @@ func TestList(t *testing.T) {
 			listAvail:      false,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().ListInstalled().Return(nil, fmt.Errorf("list failed"))
@@ -160,11 +163,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return([]string{"test-repo"}, nil)
+				pm.EXPECT().SetEnableRepos([]string{"test-repo"})
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("list failed"))
 			},
@@ -177,11 +181,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return([]string{"test-repo"}, nil)
+				pm.EXPECT().SetEnableRepos([]string{"test-repo"})
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
 			},
@@ -194,12 +199,13 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       true,
 			compatibleOnly: true,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return([]string{"test-repo"}, nil)
+				pm.EXPECT().SetEnableRepos([]string{"test-repo"})
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570"},
@@ -223,7 +229,7 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       true,
 			compatibleOnly: true,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(false, nil)
@@ -246,11 +252,13 @@ func TestList(t *testing.T) {
 
 			mockProvider := mocks.NewMockProvider(ctrl)
 			mockRM := mocks.NewMockRepositoryManager(ctrl)
+			mockPM := mocks.NewMockPackageManager(ctrl)
 
-			tt.setup(mockProvider, mockRM)
+			tt.setup(mockProvider, mockPM, mockRM)
 
 			deps := api.CoreDeps{
 				RepositoryManager: mockRM,
+				PackageManager:    mockPM,
 				Providers:         []api.Provider{mockProvider},
 			}
 

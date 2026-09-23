@@ -131,6 +131,12 @@ is given.
 Display information about driver stacks.
 If no options are given,
 this shows drivers available from configured repositories.
+Required RHEL repositories are enabled only for the availability query;
+listing does not permanently change repository configuration.
+If required repository definitions are missing, configure registration
+and subscriptions, or use the global
+.Fl -skip-subscriptions
+option to query existing DNF sources.
 The
 .Fl -installed
 option may be used to display installed drivers instead, or both

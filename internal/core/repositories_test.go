@@ -39,6 +39,7 @@ func TestListSelectsProviderChannels(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			rm := mocks.NewMockRepositoryManager(ctrl)
+			pm := mocks.NewMockPackageManager(ctrl)
 			nv := mocks.NewMockProvider(ctrl)
 			am := mocks.NewMockProvider(ctrl)
 			third := mocks.NewMockProvider(ctrl)
@@ -58,7 +59,8 @@ func TestListSelectsProviderChannels(t *testing.T) {
 			}
 			am.EXPECT().RequiredChannels().Return([]string{"BaseOS", "Extensions"})
 			third.EXPECT().RequiredChannels().Return([]string{"BaseOS", "ThirdChannel"})
-			prepared := rm.EXPECT().EnsureRepositoriesEnabled(wantChannels).Return(nil)
+			prepared := rm.EXPECT().GetRepoIDs(wantChannels).Return([]string{"selected-repos"}, nil)
+			configured := pm.EXPECT().SetEnableRepos([]string{"selected-repos"}).After(prepared)
 			for _, detected := range detections {
 				prepared.After(detected)
 			}
@@ -68,9 +70,9 @@ func TestListSelectsProviderChannels(t *testing.T) {
 				}
 				id := []string{"nvidia", "amdgpu", "third"}[i]
 				p.EXPECT().GetID().Return(id).AnyTimes()
-				p.EXPECT().ListAvailable().After(prepared).Return([]api.DriverID{{ProviderID: id, Version: "1"}}, nil)
+				p.EXPECT().ListAvailable().After(configured).Return([]api.DriverID{{ProviderID: id, Version: "1"}}, nil)
 			}
-			got, err := List(api.CoreDeps{RepositoryManager: rm, Providers: providers}, false, true, true, compatibleOnly)
+			got, err := List(api.CoreDeps{RepositoryManager: rm, PackageManager: pm, Providers: providers}, false, true, true, compatibleOnly)
 			if err != nil || len(got) != wantCount {
 				t.Fatalf("List() = %v, %v; want %d drivers", got, err, wantCount)
 			}

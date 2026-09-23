@@ -143,14 +143,6 @@ func TestDnf(t *testing.T) {
 			},
 		},
 		{
-			name: "ListAvailableCached",
-			testFunc: func(t *testing.T) error {
-				out, err := pm.ListAvailablePackages()
-				assertTwoPackagesAntBash(out, t)
-				return err
-			},
-		},
-		{
 			name: "ListInstalledFailure",
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().

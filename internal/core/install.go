@@ -12,11 +12,22 @@ func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, for
 		return fmt.Errorf("not specified what to install")
 	}
 
-	var toInstall []api.DriverID
-
-outer:
+	var requested []api.DriverID
 	for _, driverStr := range drivers {
-		driver, provider, err := resolveDriver(deps, driverStr)
+		driver, _, err := resolveDriver(deps, driverStr)
+		if err != nil {
+			return err
+		}
+		requested = append(requested, driver)
+	}
+	providers := providersForDrivers(deps.Providers, requested)
+	if err := prepareRepositories(deps, providers, false); err != nil {
+		return err
+	}
+	var toInstall []api.DriverID
+outer:
+	for _, driver := range requested {
+		provider, err := lookupProvider(deps, driver)
 		if err != nil {
 			return err
 		}
@@ -49,9 +60,7 @@ outer:
 }
 
 func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
-	var toInstall []api.DriverID
-
-	hardwareDetected := false
+	var detectedProviders []api.Provider
 	for _, provider := range deps.Providers {
 		detected, err := provider.DetectHardware()
 		if err != nil {
@@ -59,19 +68,25 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 			continue
 		}
 		if detected {
-			hardwareDetected = true
 			log.Logf("detected %s hardware", provider.GetName())
-			available, err := provider.ListAvailable()
-			if err != nil {
-				return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
-			}
-			if len(available) > 0 {
-				toInstall = append(toInstall, available[0])
-			}
+			detectedProviders = append(detectedProviders, provider)
 		}
 	}
-	if !hardwareDetected {
+	if len(detectedProviders) == 0 {
 		return fmt.Errorf("no compatible hardware found")
+	}
+	if err := prepareRepositories(deps, detectedProviders, false); err != nil {
+		return err
+	}
+	var toInstall []api.DriverID
+	for _, provider := range detectedProviders {
+		available, err := provider.ListAvailable()
+		if err != nil {
+			return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
+		}
+		if len(available) > 0 {
+			toInstall = append(toInstall, available[0])
+		}
 	}
 	if len(toInstall) == 0 {
 		return fmt.Errorf("no drivers available for detected hardware")
@@ -81,10 +96,6 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 }
 
 func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool) error {
-	providers := providersForDrivers(deps.Providers, toInstall)
-	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(requiredChannels(providers)); err != nil {
-		return fmt.Errorf("failed to verify/enable repositories: %w", err)
-	}
 	var allPkgs []string
 	for _, provider := range deps.Providers {
 		provID := provider.GetID()

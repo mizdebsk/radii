@@ -90,7 +90,11 @@ func TestRepoEnabled(t *testing.T) {
 				repoFile = tt.name
 			}
 			repoPath := filepath.Join("testdata/" + repoFile + ".repo")
-			result := repoEnabled(repoPath, tt.repoID)
+			states, err := readRepoStates(repoPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			result := states[tt.repoID]
 			if result != tt.expected {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}

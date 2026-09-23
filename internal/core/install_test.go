@@ -47,6 +47,9 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("failed to list"))
 			},
 		},
@@ -57,6 +60,9 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -69,6 +75,9 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -88,6 +97,7 @@ func TestInstallSpecific(t *testing.T) {
 				}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
@@ -105,6 +115,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
@@ -116,10 +127,6 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				p.EXPECT().ListAvailable().Return([]api.DriverID{
-					{ProviderID: "nvidia", Version: "570.86.16"},
-				}, nil)
-				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(fmt.Errorf("repo enable failed"))
 			},
@@ -137,6 +144,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return(nil, fmt.Errorf("install failed"))
 			},
 		},
@@ -153,6 +161,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(fmt.Errorf("dnf failed"))
 			},
@@ -204,6 +213,9 @@ func TestInstallAutoDetect(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
 			},
 		},
@@ -213,6 +225,9 @@ func TestInstallAutoDetect(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
+				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
+				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("list failed"))
 			},
 		},
@@ -228,6 +243,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
@@ -242,6 +258,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().ListAvailable().Return([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
 				pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, false, false).Return(nil)
 			},
@@ -253,9 +270,6 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				p.EXPECT().ListAvailable().Return([]api.DriverID{
-					{ProviderID: "nvidia", Version: "570.86.16"},
-				}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(fmt.Errorf("repo error"))
 			},

@@ -2,6 +2,8 @@ package rhsm
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,10 +11,13 @@ import (
 	"github.com/mizdebsk/radii/internal/log"
 )
 
-func repoEnabled(path, repoID string) bool {
+func readRepoStates(path string) (map[string]bool, error) {
 	f, err := os.Open(filepath.Clean(path))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
 	if err != nil {
-		return false
+		return nil, fmt.Errorf("failed to read repository definitions from %s: %w", path, err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -21,7 +26,8 @@ func repoEnabled(path, repoID string) bool {
 	}()
 
 	sc := bufio.NewScanner(f)
-	inSection := false
+	states := make(map[string]bool)
+	section := ""
 
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
@@ -30,26 +36,23 @@ func repoEnabled(path, repoID string) bool {
 		}
 
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			section := strings.TrimSpace(line[1 : len(line)-1])
-			inSection = section == repoID
+			section = strings.TrimSpace(line[1 : len(line)-1])
+			states[section] = false
 			continue
 		}
-		if !inSection {
+		if section == "" {
 			continue
 		}
 
-		if strings.HasPrefix(strings.ToLower(line), "enabled") {
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) != 2 {
-				return false
-			}
-			val := parts[1]
+		key, val, found := strings.Cut(line, "=")
+		if found && strings.EqualFold(strings.TrimSpace(key), "enabled") {
 			val = strings.SplitN(val, "#", 2)[0]
 			val = strings.ToLower(strings.TrimSpace(val))
-
-			return val == "1" || val == "true" || val == "yes" || val == "on"
+			states[section] = val == "1" || val == "true" || val == "yes" || val == "on"
 		}
 	}
-
-	return false
+	if err := sc.Err(); err != nil {
+		return nil, fmt.Errorf("failed to read repository definitions from %s: %w", path, err)
+	}
+	return states, nil
 }

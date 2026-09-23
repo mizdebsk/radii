@@ -180,7 +180,11 @@ Must not be combined with explicit driver arguments.
 .It Fl -batch
 Run non-interactively, assuming confirmation where required.
 .It Fl -dry-run
-Show what would be changed without modifying the system.
+Show the proposed transaction without changing packages or repository
+configuration.
+Required repositories are enabled temporarily for both availability
+queries and the simulated installation.
+DNF may refresh its metadata cache.
 .It Fl -force
 Proceed even if no compatible hardware was detected for the selected
 driver stack, or other validation checks report potential issues.

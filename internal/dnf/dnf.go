@@ -35,6 +35,14 @@ func (pm *pkgMgr) SetEnableRepos(repos []string) {
 	pm.availableCache.Clear()
 }
 
+func (pm *pkgMgr) repoArgs() []string {
+	var args []string
+	for _, repo := range pm.enableRepos {
+		args = append(args, "--enablerepo="+repo)
+	}
+	return args
+}
+
 func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
 	return pm.availableCache.Get(func() ([]api.PackageInfo, error) {
 		tags := []string{"name", "epoch", "version", "release", "arch", "sourcerpm", "repoid"}
@@ -47,9 +55,7 @@ func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
 		// With DNF 4 it will result in empty lines, but they are ignored anyway.
 		format += "|YYY\n"
 		args := []string{"-q", "repoquery"}
-		for _, repo := range pm.enableRepos {
-			args = append(args, "--enablerepo="+repo)
-		}
+		args = append(args, pm.repoArgs()...)
 		args = append(args, "--qf", format)
 		lines, err := pm.exec.RunCapture(pm.bin, args...)
 		if err != nil {
@@ -113,6 +119,9 @@ func (pm *pkgMgr) runTransaction(operation string, packages []string, batchMode,
 		args = append(args, "--assumeno")
 	} else if batchMode {
 		args = append(args, "-y")
+	}
+	if operation == "install" {
+		args = append(args, pm.repoArgs()...)
 	}
 	args = append(args, operation)
 	if len(packages) == 0 {

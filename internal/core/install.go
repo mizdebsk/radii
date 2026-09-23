@@ -22,7 +22,7 @@ func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, for
 		requested = append(requested, driver)
 	}
 	providers := providersForDrivers(deps.Providers, requested)
-	if err := prepareRepositories(deps, providers, false); err != nil {
+	if err := prepareRepositories(deps, providers, dryRun); err != nil {
 		return err
 	}
 	var toInstall []api.DriverID
@@ -83,7 +83,7 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 		}
 		return fmt.Errorf("multiple hardware providers detected: %s; select one or more drivers explicitly with 'radii install <vendor>:<version> ...'; use 'radii list --compatible' to see available driver IDs", strings.Join(names, ", "))
 	}
-	if err := prepareRepositories(deps, detectedProviders, false); err != nil {
+	if err := prepareRepositories(deps, detectedProviders, dryRun); err != nil {
 		return err
 	}
 	var toInstall []api.DriverID

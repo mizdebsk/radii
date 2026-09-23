@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -28,20 +27,23 @@ type SysInfo struct {
 }
 
 func DetectSysInfo() SysInfo {
-	arch := detectArch()
-	isRhel, osVersion := detectOs(osReleasePath)
-	cloudProvider := detectCloudProvider(cloudInfoPath)
-	kernel, err := detectKernel(kernelReleasePath)
+	info := detectSysInfo(osReleasePath, kernelReleasePath)
+	info.CloudProvider = detectCloudProvider(cloudInfoPath)
+	return info
+}
+
+func detectSysInfo(osPath, kernelPath string) SysInfo {
+	isRhel, osVersion := detectOs(osPath)
+	kernel, err := detectKernel(kernelPath)
 	if err != nil {
 		log.Warnf("unable to detect running kernel: %v", err)
 	}
 	return SysInfo{
 		IsRhel:        isRhel,
 		OsVersion:     osVersion,
-		Arch:          arch,
+		Arch:          kernel.arch,
 		KernelVersion: kernel.version,
 		KernelVariant: kernel.variant,
-		CloudProvider: cloudProvider,
 	}
 }
 
@@ -70,18 +72,6 @@ func detectKernel(path string) (kernelInfo, error) {
 		return kernelInfo{}, fmt.Errorf("invalid kernel release %q", release)
 	}
 	return kernelInfo{version: version, arch: arch, variant: variant}, nil
-}
-
-func detectArch() string {
-	switch runtime.GOARCH {
-	case "amd64":
-		return "x86_64"
-	case "arm64":
-		return "aarch64"
-	default:
-		// ppc64le, s390x, etc.
-		return runtime.GOARCH
-	}
 }
 
 func detectOs(path string) (bool, int) {

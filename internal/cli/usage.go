@@ -35,7 +35,7 @@ If multiple hardware providers are detected, choose drivers explicitly.
 Options:
   --auto-detect   Select drivers automatically (exclusive with arguments)
   --batch         Run non-interactively
-  --dry-run       Show what would be done without making changes
+  --dry-run       Preview without changing packages or repository configuration
   --force         Install even if detection does not match hardware
 `, progName, progName)
 }

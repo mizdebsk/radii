@@ -39,3 +39,26 @@ func TestAvailableCacheFollowsRepositoryConfiguration(t *testing.T) {
 	pm = NewPackageManager(executor)
 	query(nil, "separate-manager")
 }
+
+func TestTransactionsUseTemporaryRepositories(t *testing.T) {
+	for _, batch := range []bool{false, true} {
+		name := "Interactive"
+		if batch {
+			name = "Batch"
+		}
+		t.Run(name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			executor := mocks.NewMockExecutor(ctrl)
+			pm := NewPackageManager(executor)
+			pm.SetEnableRepos([]string{"base", "extensions"})
+			executor.EXPECT().Run("dnf", []string{"--assumeno", "--enablerepo=base", "--enablerepo=extensions", "install", "kmod-amdgpu"}).Return(nil)
+			if err := pm.Install([]string{"kmod-amdgpu"}, batch, true); err != nil {
+				t.Fatal(err)
+			}
+			executor.EXPECT().Run("dnf", []string{"--assumeno", "remove", "kmod-amdgpu"}).Return(nil)
+			if err := pm.Remove([]string{"kmod-amdgpu"}, batch, true); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}

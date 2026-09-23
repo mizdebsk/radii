@@ -14,7 +14,7 @@ func TestInstallLatest(t *testing.T) {
 	drivers := []api.DriverID{{ProviderID: "amdgpu", Version: variantLatest}}
 	want := []string{pkgKmodAmdgpu, pkgRocm}
 
-	installed, err := provider.Install(drivers)
+	installed, err := provider.Install(drivers, api.KernelTarget{})
 	if err != nil {
 		t.Fatalf("Install() error = %v", err)
 	}
@@ -64,7 +64,7 @@ func TestInstallAndRemoveRejectUnknownVariant(t *testing.T) {
 	provider := NewProvider(nil).(*prov)
 	drivers := []api.DriverID{{ProviderID: "amdgpu", Version: "unknown"}}
 
-	if _, err := provider.Install(drivers); err == nil {
+	if _, err := provider.Install(drivers, api.KernelTarget{}); err == nil {
 		t.Fatal("Install() error = nil, want non-nil")
 	}
 	if _, err := provider.Remove(drivers); err == nil {

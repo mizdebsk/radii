@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/mocks"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 func TestInstallValidatesAllArgumentsBeforeRepositorySetup(t *testing.T) {
@@ -15,12 +16,12 @@ func TestInstallValidatesAllArgumentsBeforeRepositorySetup(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			provider := mocks.NewMockProvider(ctrl)
 			provider.EXPECT().GetID().Return("amdgpu").AnyTimes()
-			deps := api.CoreDeps{
+			deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"},
 				Providers:         []api.Provider{provider},
 				RepositoryManager: mocks.NewMockRepositoryManager(ctrl),
 				PackageManager:    mocks.NewMockPackageManager(ctrl),
 			}
-			if err := InstallSpecific(deps, []string{"amdgpu:latest", invalid}, false, false, true); err == nil {
+			if err := InstallSpecific(deps, []string{"amdgpu:latest", invalid}, false, false, true, api.KernelOptions{}); err == nil {
 				t.Fatal("expected invalid request to fail before repository or package calls")
 			}
 		})
@@ -46,11 +47,11 @@ func TestExplicitMixedInstallPreparesSelectedProviders(t *testing.T) {
 		p.EXPECT().RequiredChannels().Return(channels).Times(1)
 		driver := api.DriverID{ProviderID: id, Version: "1"}
 		available := p.EXPECT().ListAvailable().After(configured).Return([]api.DriverID{driver}, nil)
-		p.EXPECT().Install([]api.DriverID{driver}).After(available).Return([]string{id + "-pkg"}, nil)
+		p.EXPECT().Install([]api.DriverID{driver}, api.KernelTarget{Arch: "x86_64"}).After(available).Return([]string{id + "-pkg"}, nil)
 	}
 	pm.EXPECT().Install([]string{"nvidia-pkg", "amdgpu-pkg"}, true, false).Return(nil)
-	deps := api.CoreDeps{Providers: providers, RepositoryManager: rm, PackageManager: pm}
-	if err := InstallSpecific(deps, []string{"amdgpu:1", "nvidia:1"}, true, false, true); err != nil {
+	deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: providers, RepositoryManager: rm, PackageManager: pm}
+	if err := InstallSpecific(deps, []string{"amdgpu:1", "nvidia:1"}, true, false, true, api.KernelOptions{}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -70,10 +71,10 @@ func TestAutoDetectPreparesRepositoriesAfterDetection(t *testing.T) {
 	prepared := rm.EXPECT().EnsureRepositoriesEnabled([]string{"ThirdChannel"}).After(detected).After(notDetected).Return(nil)
 	configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(prepared)
 	available := selected.EXPECT().ListAvailable().After(configured).Return([]api.DriverID{{ProviderID: "third", Version: "1"}}, nil)
-	selected.EXPECT().Install([]api.DriverID{{ProviderID: "third", Version: "1"}}).After(available).Return([]string{"third-pkg"}, nil)
+	selected.EXPECT().Install([]api.DriverID{{ProviderID: "third", Version: "1"}}, api.KernelTarget{Arch: "x86_64"}).After(available).Return([]string{"third-pkg"}, nil)
 	pm.EXPECT().Install([]string{"third-pkg"}, false, false).Return(nil)
-	deps := api.CoreDeps{Providers: []api.Provider{selected, absent}, RepositoryManager: rm, PackageManager: pm}
-	if err := InstallAutoDetect(deps, false, false, false); err != nil {
+	deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: []api.Provider{selected, absent}, RepositoryManager: rm, PackageManager: pm}
+	if err := InstallAutoDetect(deps, false, false, false, api.KernelOptions{}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -88,7 +89,7 @@ func TestListClearsRepositoryOverrides(t *testing.T) {
 	resolved := rm.EXPECT().GetRepoIDs([]string{"ThirdChannel"}).Return(nil, nil)
 	cleared := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(resolved)
 	provider.EXPECT().ListAvailable().After(cleared).Return(nil, nil)
-	_, err := List(api.CoreDeps{Providers: []api.Provider{provider}, RepositoryManager: rm, PackageManager: pm}, false, true, false, false)
+	_, err := List(api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: []api.Provider{provider}, RepositoryManager: rm, PackageManager: pm}, false, true, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +100,7 @@ func TestCompatibleListDetectionFailureNeedsNoRepositories(t *testing.T) {
 	provider := mocks.NewMockProvider(ctrl)
 	provider.EXPECT().GetName().Return("Third GPU")
 	provider.EXPECT().DetectHardware().Return(false, errors.New("detection failed"))
-	result, err := List(api.CoreDeps{Providers: []api.Provider{provider}}, true, true, false, true)
+	result, err := List(api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"}, Providers: []api.Provider{provider}}, true, true, false, true)
 	if err != nil || len(result) != 0 {
 		t.Fatalf("List() = %v, %v", result, err)
 	}

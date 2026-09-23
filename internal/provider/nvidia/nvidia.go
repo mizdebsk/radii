@@ -3,6 +3,7 @@ package nvidia
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/rpmver"
@@ -82,7 +83,7 @@ func packageSetStatic() []string {
 	}
 }
 
-func (p *prov) Install(driversInst []api.DriverID) ([]string, error) {
+func (p *prov) Install(driversInst []api.DriverID, kernel api.KernelTarget) ([]string, error) {
 	if p.PM == nil {
 		return []string{}, fmt.Errorf("no PackageManager provided for NVIDIA installer")
 	}
@@ -107,13 +108,56 @@ outer:
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to list available packages: %w", err)
 	}
+	kmods, err := kernelModulePackages(avail, driversInst, kernel)
+	if err != nil {
+		return nil, err
+	}
 
 	var pkgs []string
 	for _, driver := range driversInst {
 		pkgs = append(pkgs, packageSetVersioned(avail, driver.Version, true)...)
 	}
 	pkgs = append(pkgs, packageSetStatic()...)
+	pkgs = append(pkgs, kmods...)
 	return pkgs, nil
+}
+
+func kernelModulePackages(all []api.PackageInfo, drivers []api.DriverID, kernel api.KernelTarget) ([]string, error) {
+	name := "kmod-nvidia-open"
+	switch kernel.Variant {
+	case "":
+	case "64k":
+		if kernel.Arch != "aarch64" {
+			return nil, fmt.Errorf("NVIDIA 64k kernel modules require aarch64")
+		}
+		name = "kmod-64k-nvidia-open"
+	default:
+		return nil, fmt.Errorf("unsupported NVIDIA kernel variant %q", kernel.Variant)
+	}
+	if kernel.Version == "" {
+		return []string{name}, nil
+	}
+
+	// RHEL kmod names omit the kernel's distribution release tag.
+	kernelVersion, _, _ := strings.Cut(kernel.Version, ".el")
+	var packages []string
+	for _, driver := range drivers {
+		packageName := name + "-" + driver.Version + "-" + kernelVersion
+		var best *api.PackageInfo
+		for _, pkg := range all {
+			if pkg.Name != packageName || pkg.Version != driver.Version || pkg.Arch != kernel.Arch {
+				continue
+			}
+			if best == nil || rpmver.CompareEVR(best.Epoch, best.Version, best.Release, pkg.Epoch, pkg.Version, pkg.Release) < 0 {
+				best = &pkg
+			}
+		}
+		if best == nil {
+			return nil, fmt.Errorf("NVIDIA kernel module %s for %s is not available", packageName, kernel.Arch)
+		}
+		packages = append(packages, best.NEVRA())
+	}
+	return packages, nil
 }
 
 func (p *prov) ListAvailable() ([]api.DriverID, error) {

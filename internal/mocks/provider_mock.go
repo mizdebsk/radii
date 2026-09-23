@@ -78,18 +78,18 @@ func (mr *MockProviderMockRecorder) GetName() *gomock.Call {
 }
 
 // Install mocks base method.
-func (m *MockProvider) Install(drivers []api.DriverID) ([]string, error) {
+func (m *MockProvider) Install(drivers []api.DriverID, kernel api.KernelTarget) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Install", drivers)
+	ret := m.ctrl.Call(m, "Install", drivers, kernel)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Install indicates an expected call of Install.
-func (mr *MockProviderMockRecorder) Install(drivers interface{}) *gomock.Call {
+func (mr *MockProviderMockRecorder) Install(drivers, kernel interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Install", reflect.TypeOf((*MockProvider)(nil).Install), drivers)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Install", reflect.TypeOf((*MockProvider)(nil).Install), drivers, kernel)
 }
 
 // ListAvailable mocks base method.

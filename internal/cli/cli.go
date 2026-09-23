@@ -94,14 +94,14 @@ func runInstall(args []string, deps api.CoreDeps) error {
 		if len(drivers) > 0 {
 			return fmt.Errorf("both --auto-detect and specific drivers given")
 		}
-		return core.InstallAutoDetect(deps, batchMode, dryRun, force)
+		return core.InstallAutoDetect(deps, batchMode, dryRun, force, api.KernelOptions{})
 	}
 
 	if len(drivers) == 0 {
 		return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
 	}
 
-	return core.InstallSpecific(deps, drivers, batchMode, dryRun, force)
+	return core.InstallSpecific(deps, drivers, batchMode, dryRun, force, api.KernelOptions{})
 }
 
 func runRemove(args []string, deps api.CoreDeps) error {

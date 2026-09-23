@@ -6,7 +6,7 @@ type Provider interface {
 	GetID() string
 	GetName() string
 	RequiredChannels() []string
-	Install(drivers []DriverID) ([]string, error)
+	Install(drivers []DriverID, kernel KernelTarget) ([]string, error)
 	Remove(drivers []DriverID) ([]string, error)
 	ListAvailable() ([]DriverID, error)
 	ListInstalled() ([]DriverID, error)

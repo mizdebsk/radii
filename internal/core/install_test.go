@@ -8,6 +8,7 @@ import (
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/mocks"
+	"github.com/mizdebsk/radii/internal/sysinfo"
 )
 
 func TestInstallSpecific(t *testing.T) {
@@ -98,7 +99,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
 		},
@@ -116,7 +117,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
 		},
@@ -145,7 +146,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return(nil, fmt.Errorf("install failed"))
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return(nil, fmt.Errorf("install failed"))
 			},
 		},
 		{
@@ -162,7 +163,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(fmt.Errorf("dnf failed"))
 			},
 		},
@@ -179,13 +180,13 @@ func TestInstallSpecific(t *testing.T) {
 
 			tt.setup(mockProvider, mockPM, mockRM)
 
-			deps := api.CoreDeps{
+			deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"},
 				PackageManager:    mockPM,
 				RepositoryManager: mockRM,
 				Providers:         []api.Provider{mockProvider},
 			}
 
-			err := InstallSpecific(deps, tt.drivers, tt.batchMode, tt.dryRun, tt.force)
+			err := InstallSpecific(deps, tt.drivers, tt.batchMode, tt.dryRun, tt.force, api.KernelOptions{})
 			if (err != nil) != tt.expectErr {
 				t.Errorf("InstallSpecific() error = %v, expectErr %v", err, tt.expectErr)
 			}
@@ -244,7 +245,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
 		},
@@ -259,7 +260,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().Install([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
 				pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, false, false).Return(nil)
 			},
 		},
@@ -288,13 +289,13 @@ func TestInstallAutoDetect(t *testing.T) {
 
 				tt.setup(mockProvider, mockPM, mockRM)
 
-				deps := api.CoreDeps{
+				deps := api.CoreDeps{SystemInfo: sysinfo.SysInfo{Arch: "x86_64"},
 					PackageManager:    mockPM,
 					RepositoryManager: mockRM,
 					Providers:         []api.Provider{mockProvider},
 				}
 
-				err := InstallAutoDetect(deps, false, false, force)
+				err := InstallAutoDetect(deps, false, false, force, api.KernelOptions{})
 				if (err != nil) != tt.expectErr {
 					t.Errorf("InstallAutoDetect() error = %v, expectErr %v", err, tt.expectErr)
 				}

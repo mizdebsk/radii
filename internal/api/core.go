@@ -1,5 +1,7 @@
 package api
 
+import "github.com/mizdebsk/radii/internal/sysinfo"
+
 //go:generate mockgen -source=core.go -destination=../mocks/core_mock.go -package=mocks
 
 type RepositoryManager interface {
@@ -14,10 +16,22 @@ type DriverID struct {
 }
 
 type CoreDeps struct {
+	SystemInfo        sysinfo.SysInfo
 	PackageManager    PackageManager
 	RepositoryManager RepositoryManager
 	Providers         []Provider
 	Executor          Executor
+}
+
+type KernelOptions struct {
+	Version string
+	Variant *string
+}
+
+type KernelTarget struct {
+	Version string
+	Variant string
+	Arch    string
 }
 
 type DriverStatus struct {

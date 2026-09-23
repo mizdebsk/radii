@@ -3,6 +3,7 @@ package sysinfo
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
@@ -11,13 +12,18 @@ import (
 	"github.com/mizdebsk/radii/internal/log"
 )
 
-const osReleasePath = "/etc/os-release"
-const cloudInfoPath = "/run/cloud-init/instance-data.json"
+const (
+	cloudInfoPath     = "/run/cloud-init/instance-data.json"
+	osReleasePath     = "/etc/os-release"
+	kernelReleasePath = "/proc/sys/kernel/osrelease"
+)
 
 type SysInfo struct {
 	IsRhel        bool
 	OsVersion     int
 	Arch          string
+	KernelVersion string
+	KernelVariant string
 	CloudProvider string
 }
 
@@ -25,12 +31,45 @@ func DetectSysInfo() SysInfo {
 	arch := detectArch()
 	isRhel, osVersion := detectOs(osReleasePath)
 	cloudProvider := detectCloudProvider(cloudInfoPath)
+	kernel, err := detectKernel(kernelReleasePath)
+	if err != nil {
+		log.Warnf("unable to detect running kernel: %v", err)
+	}
 	return SysInfo{
 		IsRhel:        isRhel,
 		OsVersion:     osVersion,
 		Arch:          arch,
+		KernelVersion: kernel.version,
+		KernelVariant: kernel.variant,
 		CloudProvider: cloudProvider,
 	}
+}
+
+type kernelInfo struct {
+	version string
+	arch    string
+	variant string
+}
+
+func detectKernel(path string) (kernelInfo, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return kernelInfo{}, err
+	}
+	release := strings.TrimSpace(string(data))
+	base, variant, hasVariant := strings.Cut(release, "+")
+	archStart := strings.LastIndexByte(base, '.')
+	if archStart < 0 || strings.ContainsAny(release, " \t\r\n") ||
+		(hasVariant && (variant == "" || strings.Contains(variant, "+"))) {
+		return kernelInfo{}, fmt.Errorf("invalid kernel release %q", release)
+	}
+	version, arch := base[:archStart], base[archStart+1:]
+	upstream, revision, hasRevision := strings.Cut(version, "-")
+	if !hasRevision || upstream == "" || revision == "" || arch == "" ||
+		strings.ContainsAny(arch, "-+") {
+		return kernelInfo{}, fmt.Errorf("invalid kernel release %q", release)
+	}
+	return kernelInfo{version: version, arch: arch, variant: variant}, nil
 }
 
 func detectArch() string {

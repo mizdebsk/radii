@@ -1,6 +1,26 @@
 package core
 
-import "github.com/mizdebsk/radii/internal/api"
+import (
+	"fmt"
+
+	"github.com/mizdebsk/radii/internal/api"
+)
+
+func prepareRepositories(deps api.CoreDeps, providers []api.Provider, readOnly bool) error {
+	channels := requiredChannels(providers)
+	var repos []string
+	if readOnly {
+		var err error
+		repos, err = deps.RepositoryManager.GetRepoIDs(channels)
+		if err != nil {
+			return fmt.Errorf("failed to determine query repositories: %w", err)
+		}
+	} else if err := deps.RepositoryManager.EnsureRepositoriesEnabled(channels); err != nil {
+		return fmt.Errorf("failed to verify/enable repositories: %w", err)
+	}
+	deps.PackageManager.SetEnableRepos(repos)
+	return nil
+}
 
 func requiredChannels(providers []api.Provider) []string {
 	var channels []string

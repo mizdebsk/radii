@@ -2,6 +2,7 @@ package dnf
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
@@ -12,8 +13,10 @@ import (
 const defaultDNFBinary = "dnf"
 
 type pkgMgr struct {
-	bin  string
-	exec api.Executor
+	bin            string
+	exec           api.Executor
+	enableRepos    []string
+	availableCache cache.Cache[[]api.PackageInfo]
 }
 
 var _ api.PackageManager = (*pkgMgr)(nil)
@@ -25,11 +28,15 @@ func NewPackageManager(executor api.Executor) api.PackageManager {
 	}
 }
 
-var availableCache = cache.Cache[[]api.PackageInfo]{}
 var installedCache = cache.Cache[[]api.PackageInfo]{}
 
+func (pm *pkgMgr) SetEnableRepos(repos []string) {
+	pm.enableRepos = slices.Clone(repos)
+	pm.availableCache.Clear()
+}
+
 func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
-	return availableCache.Get(func() ([]api.PackageInfo, error) {
+	return pm.availableCache.Get(func() ([]api.PackageInfo, error) {
 		tags := []string{"name", "epoch", "version", "release", "arch", "sourcerpm", "repoid"}
 		// QQQ and YYY are there to make filtering spurious lines easier.
 		format := "QQQ"
@@ -39,7 +46,12 @@ func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
 		// Trailing NL is not required with DNF 4, but will be required with DNF 5.
 		// With DNF 4 it will result in empty lines, but they are ignored anyway.
 		format += "|YYY\n"
-		lines, err := pm.exec.RunCapture(pm.bin, []string{"-q", "repoquery", "--qf", format}...)
+		args := []string{"-q", "repoquery"}
+		for _, repo := range pm.enableRepos {
+			args = append(args, "--enablerepo="+repo)
+		}
+		args = append(args, "--qf", format)
+		lines, err := pm.exec.RunCapture(pm.bin, args...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list available packages: %w", err)
 		}

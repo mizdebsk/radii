@@ -36,8 +36,8 @@ func List(deps api.CoreDeps, listInst, listAvail, hwdetect, compatibleOnly bool)
 	}
 
 	if listAvail {
-		if err := deps.RepositoryManager.EnsureRepositoriesEnabled(requiredChannels(providers)); err != nil {
-			return result, fmt.Errorf("failed to verify/enable repositories: %w", err)
+		if err := prepareRepositories(deps, providers, true); err != nil {
+			return result, err
 		}
 	}
 

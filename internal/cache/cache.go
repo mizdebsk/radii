@@ -10,6 +10,14 @@ type Cache[T any] struct {
 	val   T
 }
 
+func (c *Cache[T]) Clear() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	var zero T
+	c.val = zero
+	c.ready = false
+}
+
 func (c *Cache[T]) Get(
 	compute func() (T, error),
 ) (T, error) {

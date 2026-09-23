@@ -217,6 +217,12 @@ func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 	var pkgs []string
 	for _, driver := range drivers {
 		pkgs = append(pkgs, packageSetVersioned(inst, driver.Version, false)...)
+		for _, pkg := range inst {
+			if pkg.Version == driver.Version &&
+				(strings.HasPrefix(pkg.Name, "kmod-nvidia-open-") || strings.HasPrefix(pkg.Name, "kmod-64k-nvidia-open-")) {
+				pkgs = append(pkgs, pkg.NEVRA())
+			}
+		}
 	}
 	pkgs = append(pkgs, packageSetStatic()...)
 	return pkgs, nil

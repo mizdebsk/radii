@@ -29,6 +29,8 @@ func printInstallUsage() {
 Install driver stacks.
 Either specify drivers explicitly, or use --auto-detect to install
 the default drivers for hardware detected in the system.
+Installing drivers from multiple providers may cause conflicts.
+If multiple hardware providers are detected, choose drivers explicitly.
 
 Options:
   --auto-detect   Select drivers automatically (exclusive with arguments)

@@ -48,6 +48,7 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
@@ -61,6 +62,7 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
@@ -76,12 +78,6 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
-				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
-				pm.EXPECT().SetEnableRepos(gomock.Nil())
-				p.EXPECT().ListAvailable().Return([]api.DriverID{
-					{ProviderID: "nvidia", Version: "570.86.16"},
-				}, nil)
 				p.EXPECT().DetectHardware().Return(false, nil)
 			},
 		},
@@ -128,6 +124,7 @@ func TestInstallSpecific(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(fmt.Errorf("repo enable failed"))
 			},

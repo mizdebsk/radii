@@ -29,7 +29,7 @@ func TestInstallSpecific(t *testing.T) {
 		},
 		{
 			name:      "InvalidDriverFormat",
-			drivers:   []string{"invalid-format"},
+			drivers:   []string{"nvidia:"},
 			expectErr: true,
 			setup:     func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {},
 		},

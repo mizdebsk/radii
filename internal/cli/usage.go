@@ -27,6 +27,8 @@ func printInstallUsage() {
   %s install [options] <vendor[:version]>...
 
 Install driver stacks.
+Omit the version or use :default to select the provider's default driver stack.
+Use :latest to select the newest available version.
 Either specify drivers explicitly, or use --auto-detect to install
 the default drivers for hardware detected in the system.
 Installing drivers from multiple providers may cause conflicts.
@@ -53,6 +55,7 @@ func printRemoveUsage() {
   %s remove <vendor[:version]>...
 
 Remove installed driver stacks.
+Omit the version to remove all installed versions for that provider.
 
 Options:
   --all       Remove all managed drivers (exclusive with arguments)

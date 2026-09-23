@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/log"
@@ -15,13 +16,29 @@ func RemoveSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun bool)
 	}
 outer:
 	for _, driverStr := range drivers {
-		driver, provider, err := resolveDriver(deps, driverStr)
+		allVersions := driverStr != "" && !strings.Contains(driverStr, ":")
+		driver := api.DriverID{ProviderID: driverStr}
+		if !allVersions {
+			var err error
+			driver, err = parseDriverID(driverStr)
+			if err != nil {
+				return err
+			}
+		}
+		provider, err := lookupProvider(deps, driver)
 		if err != nil {
 			return err
 		}
 		installed, err := provider.ListInstalled()
 		if err != nil {
 			return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
+		}
+		if allVersions {
+			if len(installed) == 0 {
+				return fmt.Errorf("no %s drivers installed", provider.GetName())
+			}
+			toRemove = append(toRemove, installed...)
+			continue
 		}
 		for _, inst := range installed {
 			if inst.Version == driver.Version {

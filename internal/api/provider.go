@@ -8,6 +8,7 @@ type Provider interface {
 	RequiredChannels() []string
 	Install(drivers []DriverID, kernel KernelTarget) ([]string, error)
 	Remove(drivers []DriverID) ([]string, error)
+	// The first available driver is the provider's default.
 	ListAvailable() ([]DriverID, error)
 	ListInstalled() ([]DriverID, error)
 	DetectHardware() (bool, error)

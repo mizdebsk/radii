@@ -136,15 +136,17 @@ func TestRemoveAll(t *testing.T) {
 			expectErr: true,
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager) {
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
+				p.EXPECT().GetID().Return("nvidia").AnyTimes()
+				p.EXPECT().Remove([]api.DriverID{{ProviderID: "nvidia"}}).Return(nil, nil)
 			},
 		},
 		{
-			name:      "ListInstalledFails",
+			name:      "PackageQueryFails",
 			expectErr: true,
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager) {
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				p.EXPECT().ListInstalled().Return(nil, fmt.Errorf("list failed"))
+				p.EXPECT().GetID().Return("nvidia").AnyTimes()
+				p.EXPECT().Remove([]api.DriverID{{ProviderID: "nvidia"}}).Return(nil, fmt.Errorf("list failed"))
 			},
 		},
 		{
@@ -153,11 +155,7 @@ func TestRemoveAll(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				p.EXPECT().ListInstalled().Return([]api.DriverID{
-					{ProviderID: "nvidia", Version: "570.86.16"},
-					{ProviderID: "nvidia", Version: "560.35.03"},
-				}, nil)
-				p.EXPECT().Remove(gomock.Any()).Return([]string{"nvidia-driver-570", "nvidia-driver-560"}, nil)
+				p.EXPECT().Remove([]api.DriverID{{ProviderID: "nvidia"}}).Return([]string{"nvidia-driver-570", "nvidia-driver-560"}, nil)
 				pm.EXPECT().Remove(gomock.Any(), false, false).Return(nil)
 			},
 		},
@@ -167,10 +165,7 @@ func TestRemoveAll(t *testing.T) {
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				p.EXPECT().ListInstalled().Return([]api.DriverID{
-					{ProviderID: "nvidia", Version: "570.86.16"},
-				}, nil)
-				p.EXPECT().Remove(gomock.Any()).Return(nil, fmt.Errorf("remove failed"))
+				p.EXPECT().Remove([]api.DriverID{{ProviderID: "nvidia"}}).Return(nil, fmt.Errorf("remove failed"))
 			},
 		},
 	}

@@ -123,11 +123,15 @@ for automatic selection.
 .It Cm remove
 Remove installed driver stacks.
 Omitting the version removes all installed versions for the specified
-vendor, including their NVIDIA kernel modules where applicable.
-Either explicitly specified drivers,
-or all managed drivers if
+vendor.
+This includes leftover kernel modules whose matching driver
+version is no longer installed, even if they were installed outside
+.Nm .
+Specifying a version limits kernel module removal to that driver
+version.
+Use
 .Fl -all
-is given.
+to remove all managed driver stacks, including leftover kernel modules.
 .It Cm list
 Display information about driver stacks.
 If no options are given,

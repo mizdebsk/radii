@@ -49,7 +49,7 @@ func selectPackagesByNameVersion(all []api.PackageInfo, name, version string, la
 	} else {
 		var filtered []string
 		for _, pkg := range all {
-			if pkg.Name == name && pkg.Version == version {
+			if pkg.Name == name && (version == "" || pkg.Version == version) {
 				filtered = append(filtered, pkg.NEVRA())
 			}
 		}
@@ -218,13 +218,15 @@ func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 	for _, driver := range drivers {
 		pkgs = append(pkgs, packageSetVersioned(inst, driver.Version, false)...)
 		for _, pkg := range inst {
-			if pkg.Version == driver.Version &&
+			if (driver.Version == "" || pkg.Version == driver.Version) &&
 				(strings.HasPrefix(pkg.Name, "kmod-nvidia-open-") || strings.HasPrefix(pkg.Name, "kmod-64k-nvidia-open-")) {
 				pkgs = append(pkgs, pkg.NEVRA())
 			}
 		}
 	}
-	pkgs = append(pkgs, packageSetStatic()...)
+	if len(pkgs) != 0 {
+		pkgs = append(pkgs, packageSetStatic()...)
+	}
 	return pkgs, nil
 }
 

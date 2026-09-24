@@ -153,3 +153,16 @@ func TestListAvailablePackageStates(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveAllVersions(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	pm := mocks.NewMockPackageManager(ctrl)
+	pm.EXPECT().ListInstalledPackages().Return([]api.PackageInfo{
+		{Name: pkgKmodAmdgpu}, {Name: pkgRocm}, {Name: "unrelated"},
+	}, nil)
+	got, err := NewProvider(pm).Remove([]api.DriverID{{ProviderID: "amdgpu"}})
+	want := []string{pkgKmodAmdgpu, pkgRocm}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("Remove() = %v, %v, want %v", got, err, want)
+	}
+}

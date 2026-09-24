@@ -18,9 +18,10 @@ func TestRemoveDriverSelection(t *testing.T) {
 			versions []string
 			selected []string
 		}{
-			{"nvidia", "nvidia", []string{"580.100", "580.9"}, []string{"580.100", "580.9"}},
+			{"nvidia", "nvidia", []string{"580.100", "580.9"}, []string{""}},
+			{"nvidia", "nvidia", nil, []string{""}},
 			{"nvidia:580.9", "nvidia", []string{"580.100", "580.9"}, []string{"580.9"}},
-			{"amdgpu", "amdgpu", []string{"latest"}, []string{"latest"}},
+			{"amdgpu", "amdgpu", []string{"latest"}, []string{""}},
 		} {
 			t.Run(command+"/"+tt.argument, func(t *testing.T) {
 				ctrl := gomock.NewController(t)
@@ -36,7 +37,9 @@ func TestRemoveDriverSelection(t *testing.T) {
 				for _, version := range tt.selected {
 					selected = append(selected, api.DriverID{ProviderID: tt.provider, Version: version})
 				}
-				provider.EXPECT().ListInstalled().Return(installed, nil)
+				if strings.Contains(tt.argument, ":") {
+					provider.EXPECT().ListInstalled().Return(installed, nil)
+				}
 				provider.EXPECT().Remove(selected).Return([]string{"selected-package"}, nil)
 				pm.EXPECT().Remove([]string{"selected-package"}, true, true).Return(nil)
 				deps := api.CoreDeps{
@@ -59,8 +62,8 @@ func TestRemoveBareDriverErrors(t *testing.T) {
 		queryErr error
 		want     string
 	}{
-		{"none installed", "nvidia", true, nil, "no NVIDIA drivers installed"},
-		{"query failure", "nvidia", true, fmt.Errorf("query failed"), "failed to list installed NVIDIA drivers: query failed"},
+		{"none installed", "nvidia", true, nil, "nothing to remove"},
+		{"query failure", "nvidia", true, fmt.Errorf("query failed"), "failed to remove NVIDIA driver: query failed"},
 		{"unknown provider", "unknown", false, nil, "unknown provider"},
 		{"empty name", "", false, nil, "invalid driver ID format"},
 		{"empty version", "nvidia:", false, nil, "invalid driver ID format"},
@@ -71,7 +74,7 @@ func TestRemoveBareDriverErrors(t *testing.T) {
 			provider.EXPECT().GetID().Return("nvidia").AnyTimes()
 			provider.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 			if tt.query {
-				provider.EXPECT().ListInstalled().Return(nil, tt.queryErr)
+				provider.EXPECT().Remove([]api.DriverID{{ProviderID: "nvidia"}}).Return(nil, tt.queryErr)
 			}
 			deps := api.CoreDeps{
 				Providers: []api.Provider{provider}, PackageManager: mocks.NewMockPackageManager(ctrl),

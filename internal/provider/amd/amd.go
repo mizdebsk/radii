@@ -98,8 +98,10 @@ func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
-	if err := validateDrivers(drivers, p.GetName()); err != nil {
-		return nil, err
+	for _, driver := range drivers {
+		if driver.Version != "" && driver.Version != variantLatest {
+			return nil, fmt.Errorf("unknown %s driver variant: %s", p.GetName(), driver.Version)
+		}
 	}
 	all, err := p.PM.ListInstalledPackages()
 	if err != nil {

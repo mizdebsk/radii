@@ -29,16 +29,13 @@ outer:
 		if err != nil {
 			return err
 		}
+		if allVersions {
+			toRemove = append(toRemove, driver)
+			continue
+		}
 		installed, err := provider.ListInstalled()
 		if err != nil {
 			return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
-		}
-		if allVersions {
-			if len(installed) == 0 {
-				return fmt.Errorf("no %s drivers installed", provider.GetName())
-			}
-			toRemove = append(toRemove, installed...)
-			continue
 		}
 		for _, inst := range installed {
 			if inst.Version == driver.Version {
@@ -55,14 +52,7 @@ func RemoveAll(deps api.CoreDeps, batchMode, dryRun bool) error {
 	var toRemove []api.DriverID
 
 	for _, provider := range deps.Providers {
-		installed, err := provider.ListInstalled()
-		if err != nil {
-			return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
-		}
-		toRemove = append(toRemove, installed...)
-	}
-	if len(toRemove) == 0 {
-		return fmt.Errorf("not found any installed drivers to remove")
+		toRemove = append(toRemove, api.DriverID{ProviderID: provider.GetID()})
 	}
 	return doRemove(deps, toRemove, batchMode, dryRun)
 }

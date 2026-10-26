@@ -97,8 +97,22 @@ selects the most recent version currently available.
 Examples of driver specifications include
 .Ql nvidia ,
 .Ql nvidia:590.44.01 ,
+.Ql amdgpu:latest ,
 and
-.Ql amdgpu:latest .
+.Ql openvino .
+.Pp
+The experimental
+.Ql openvino
+provider installs the
+.Ql openvino
+package and uses Intel GPU and accelerator detection for automatic installation.
+Detection matches Intel PCI display controllers and processing accelerators;
+it does not check OpenVINO support for individual devices.
+The Intel package selection is provisional.
+For installation without a detected Intel GPU or accelerator, use
+.Dl Nm Li install --force openvino
+.Pp
+OpenVINO does not support selecting a specific kernel version.
 .Pp
 By default,
 .Nm

@@ -103,3 +103,15 @@ func (mr *MockPackageManagerMockRecorder) SetEnableRepos(repos interface{}) *gom
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEnableRepos", reflect.TypeOf((*MockPackageManager)(nil).SetEnableRepos), repos)
 }
+
+// SetRepoArgs mocks base method.
+func (m *MockPackageManager) SetRepoArgs(args []string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetRepoArgs", args)
+}
+
+// SetRepoArgs indicates an expected call of SetRepoArgs.
+func (mr *MockPackageManagerMockRecorder) SetRepoArgs(args interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepoArgs", reflect.TypeOf((*MockPackageManager)(nil).SetRepoArgs), args)
+}

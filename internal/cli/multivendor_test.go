@@ -18,6 +18,7 @@ func TestAutoDetectForce(t *testing.T) {
 				t.Run(fmt.Sprintf("force=%t/batch=%t/dry=%t", force, batch, dryRun), func(t *testing.T) {
 					ctrl := gomock.NewController(t)
 					rm := mocks.NewMockRepositoryManager(ctrl)
+					rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 					pm := mocks.NewMockPackageManager(ctrl)
 					nv := mocks.NewMockProvider(ctrl)
 					am := mocks.NewMockProvider(ctrl)
@@ -28,6 +29,7 @@ func TestAutoDetectForce(t *testing.T) {
 						id := []string{"nvidia", "amdgpu", "absent"}[i]
 						p.EXPECT().GetID().Return(id).AnyTimes()
 						p.EXPECT().GetName().Return(id).AnyTimes()
+						p.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 						detections = append(detections, p.EXPECT().DetectHardware().Return(i < 2, nil))
 					}
 					args := []string{"radii", "install", "--auto-detect"}
@@ -49,7 +51,8 @@ func TestAutoDetectForce(t *testing.T) {
 							configured = pm.EXPECT().SetEnableRepos(repos).After(prepared)
 						} else {
 							prepared = rm.EXPECT().EnsureRepositoriesEnabled(channels).Return(nil)
-							configured = pm.EXPECT().SetEnableRepos(gomock.Nil()).After(prepared)
+							resolved := rm.EXPECT().GetRepoIDs(channels).After(prepared).Return(nil, nil)
+							configured = pm.EXPECT().SetEnableRepos(gomock.Nil()).After(resolved)
 						}
 						for _, detected := range detections {
 							prepared.After(detected)

@@ -10,7 +10,8 @@ import (
 )
 
 type prov struct {
-	PM api.PackageManager
+	PM                 api.PackageManager
+	partnerRepoEnabled bool
 }
 
 var _ api.Provider = (*prov)(nil)
@@ -21,6 +22,10 @@ func NewProvider(pm api.PackageManager) api.Provider {
 	}
 }
 
+func (p *prov) SetPartnerRepoEnabled(enabled bool) {
+	p.partnerRepoEnabled = enabled
+}
+
 func (p *prov) GetID() string {
 	return "nvidia"
 }
@@ -29,7 +34,24 @@ func (p *prov) GetName() string {
 }
 
 func (p *prov) RequiredChannels() []string {
+	if p.partnerRepoEnabled {
+		return []string{"BaseOS", "AppStream"}
+	}
 	return []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
+}
+
+func (p *prov) RequiredPartnerRepos() []api.PartnerRepo {
+	if !p.partnerRepoEnabled {
+		return nil
+	}
+	return []api.PartnerRepo{
+		{
+			RepoID:  "radii-partner-nvidia-cuda",
+			Name:    "radii - NVIDIA CUDA Partner Repository",
+			BaseURL: "https://packages.redhat.com/api/pulp-content/partner-repositories/@partner-repos-nvidia-rm/cuda-monorepo-rhel-$releasever_major/custom-1-$basearch/",
+			GPGKey:  "https://redhat.gitlab.io/partner-repositories/docs/keys/nvidia-cuda-monorepo-rhel-$releasever_major.asc",
+		},
+	}
 }
 
 func selectPackagesByNameVersion(all []api.PackageInfo, name, version string, latest bool) []string {

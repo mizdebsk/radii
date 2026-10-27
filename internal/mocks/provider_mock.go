@@ -150,3 +150,17 @@ func (mr *MockProviderMockRecorder) RequiredChannels() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiredChannels", reflect.TypeOf((*MockProvider)(nil).RequiredChannels))
 }
+
+// RequiredPartnerRepos mocks base method.
+func (m *MockProvider) RequiredPartnerRepos() []api.PartnerRepo {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RequiredPartnerRepos")
+	ret0, _ := ret[0].([]api.PartnerRepo)
+	return ret0
+}
+
+// RequiredPartnerRepos indicates an expected call of RequiredPartnerRepos.
+func (mr *MockProviderMockRecorder) RequiredPartnerRepos() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequiredPartnerRepos", reflect.TypeOf((*MockProvider)(nil).RequiredPartnerRepos))
+}

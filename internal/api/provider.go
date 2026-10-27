@@ -6,6 +6,7 @@ type Provider interface {
 	GetID() string
 	GetName() string
 	RequiredChannels() []string
+	RequiredPartnerRepos() []PartnerRepo
 	Install(drivers []DriverID, kernel KernelTarget) ([]string, error)
 	// An empty version selects all installed versions, including leftover components.
 	Remove(drivers []DriverID) ([]string, error)

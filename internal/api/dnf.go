@@ -4,6 +4,7 @@ package api
 
 type PackageManager interface {
 	SetEnableRepos(repos []string)
+	SetRepoArgs(args []string)
 	ListAvailablePackages() ([]PackageInfo, error)
 	ListInstalledPackages() ([]PackageInfo, error)
 	Install(packages []string, batchMode, dryRun bool) error

@@ -16,6 +16,7 @@ type pkgMgr struct {
 	bin            string
 	exec           api.Executor
 	enableRepos    []string
+	extraRepoArgs  []string
 	availableCache cache.Cache[[]api.PackageInfo]
 }
 
@@ -35,11 +36,17 @@ func (pm *pkgMgr) SetEnableRepos(repos []string) {
 	pm.availableCache.Clear()
 }
 
+func (pm *pkgMgr) SetRepoArgs(args []string) {
+	pm.extraRepoArgs = slices.Clone(args)
+	pm.availableCache.Clear()
+}
+
 func (pm *pkgMgr) repoArgs() []string {
 	var args []string
 	for _, repo := range pm.enableRepos {
 		args = append(args, "--enablerepo="+repo)
 	}
+	args = append(args, pm.extraRepoArgs...)
 	return args
 }
 
@@ -57,6 +64,7 @@ func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
 		args := []string{"-q", "repoquery"}
 		args = append(args, pm.repoArgs()...)
 		args = append(args, "--qf", format)
+		log.Debugf("running: %s %s", pm.bin, strings.Join(args, " "))
 		lines, err := pm.exec.RunCapture(pm.bin, args...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list available packages: %w", err)

@@ -39,8 +39,26 @@ func (rm *repoMgr) SetSubscriptionsEnabled(enabled bool) {
 	rm.rhsmEnabled = enabled
 }
 
+func (rm *repoMgr) SubscriptionsAvailable() bool {
+	return rm.rhsmEnabled && rm.systemInfo.IsRhel && rm.subscriptionManagerPresent()
+}
+
 func (rm *repoMgr) repoIDForChannel(channel string) string {
 	return fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
+}
+
+func (rm *repoMgr) EnsurePartnerReposEnabled(providerID string, repos []api.PartnerRepo) error {
+	if len(repos) == 0 {
+		return nil
+	}
+	return rm.ensurePartnerRepos(providerID, repos)
+}
+
+func (rm *repoMgr) PartnerRepoDNFArgs(repos []api.PartnerRepo) ([]string, error) {
+	if len(repos) == 0 {
+		return nil, nil
+	}
+	return rm.partnerRepoDNFArgs(repos)
 }
 
 func (rm *repoMgr) GetRepoIDs(channels []string) ([]string, error) {

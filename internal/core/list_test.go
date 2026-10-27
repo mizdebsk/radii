@@ -252,7 +252,9 @@ func TestList(t *testing.T) {
 
 			mockProvider := mocks.NewMockProvider(ctrl)
 			mockRM := mocks.NewMockRepositoryManager(ctrl)
+			mockRM.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 			mockPM := mocks.NewMockPackageManager(ctrl)
+			mockProvider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 
 			tt.setup(mockProvider, mockPM, mockRM)
 

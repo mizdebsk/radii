@@ -10,6 +10,7 @@ Commands:
   install    Install driver stacks
   remove     Remove driver stacks
   list       List driver stacks
+  config     View or modify radii configuration
 
 Run '%s <command> --help' for details.
 
@@ -17,8 +18,10 @@ Options:
   --verbose              Increase output verbosity
   --quiet                Suppress informational output
   --skip-subscriptions   Skip Red Hat Subscription Manager (RHSM) setup
+  --partner-repo         Use partner repository instead of RHEL repos (overrides config)
+                         Persistent setting: %s config partner-repos true
   --version              Show program version
-`, progName, progName)
+`, progName, progName, progName)
 }
 
 func printInstallUsage() {
@@ -62,6 +65,21 @@ Options:
   --batch     Run non-interactively
   --dry-run   Show what would be done without making changes
 `, progName, progName)
+}
+
+func printConfigUsage() {
+	fmt.Printf(`Usage:
+  %s config                Show current configuration
+  %s config <key> <value>  Set a configuration value
+
+Configuration is stored in /etc/radii/config.yaml (YAML format).
+
+Keys:
+  partner-repos   Enable partner repository for NVIDIA CUDA packages (true/false)
+
+Example:
+  %s config partner-repos true
+`, progName, progName, progName)
 }
 
 func printListUsage() {

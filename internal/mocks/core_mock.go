@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	api "github.com/mizdebsk/radii/internal/api"
 )
 
 // MockRepositoryManager is a mock of RepositoryManager interface.
@@ -31,6 +32,35 @@ func NewMockRepositoryManager(ctrl *gomock.Controller) *MockRepositoryManager {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepositoryManager) EXPECT() *MockRepositoryManagerMockRecorder {
 	return m.recorder
+}
+
+// EnsurePartnerReposEnabled mocks base method.
+func (m *MockRepositoryManager) EnsurePartnerReposEnabled(providerID string, repos []api.PartnerRepo) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsurePartnerReposEnabled", providerID, repos)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsurePartnerReposEnabled indicates an expected call of EnsurePartnerReposEnabled.
+func (mr *MockRepositoryManagerMockRecorder) EnsurePartnerReposEnabled(providerID, repos interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsurePartnerReposEnabled", reflect.TypeOf((*MockRepositoryManager)(nil).EnsurePartnerReposEnabled), providerID, repos)
+}
+
+// PartnerRepoDNFArgs mocks base method.
+func (m *MockRepositoryManager) PartnerRepoDNFArgs(repos []api.PartnerRepo) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PartnerRepoDNFArgs", repos)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PartnerRepoDNFArgs indicates an expected call of PartnerRepoDNFArgs.
+func (mr *MockRepositoryManagerMockRecorder) PartnerRepoDNFArgs(repos interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PartnerRepoDNFArgs", reflect.TypeOf((*MockRepositoryManager)(nil).PartnerRepoDNFArgs), repos)
 }
 
 // EnsureRepositoriesEnabled mocks base method.
@@ -60,6 +90,20 @@ func (m *MockRepositoryManager) GetRepoIDs(channels []string) ([]string, error) 
 func (mr *MockRepositoryManagerMockRecorder) GetRepoIDs(channels interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoIDs", reflect.TypeOf((*MockRepositoryManager)(nil).GetRepoIDs), channels)
+}
+
+// SubscriptionsAvailable mocks base method.
+func (m *MockRepositoryManager) SubscriptionsAvailable() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SubscriptionsAvailable")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// SubscriptionsAvailable indicates an expected call of SubscriptionsAvailable.
+func (mr *MockRepositoryManagerMockRecorder) SubscriptionsAvailable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscriptionsAvailable", reflect.TypeOf((*MockRepositoryManager)(nil).SubscriptionsAvailable))
 }
 
 // SetSubscriptionsEnabled mocks base method.

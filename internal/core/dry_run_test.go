@@ -18,10 +18,12 @@ func TestDryRunUsesQueryRepositories(t *testing.T) {
 				t.Run(fmt.Sprintf("auto=%t/batch=%t/missing=%t", auto, batch, missing), func(t *testing.T) {
 					ctrl := gomock.NewController(t)
 					rm := mocks.NewMockRepositoryManager(ctrl)
+					rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 					pm := mocks.NewMockPackageManager(ctrl)
 					p := mocks.NewMockProvider(ctrl)
 					p.EXPECT().GetID().Return("amdgpu").AnyTimes()
 					p.EXPECT().GetName().Return("AMD GPU").AnyTimes()
+					p.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 					if auto {
 						p.EXPECT().DetectHardware().Return(true, nil)
 					}

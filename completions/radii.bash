@@ -10,8 +10,8 @@ _radii() {
   _init_completion -s -n : || return
 
   local global_flags commands
-  global_flags="--verbose --quiet --debug --version --help"
-  commands="install remove list"
+  global_flags="--verbose --quiet --debug --version --help --skip-subscriptions --partner-repo"
+  commands="install remove list config"
 
   # Completing the subcommand (first arg after radii)
   if (( cword == 1 )); then
@@ -49,6 +49,9 @@ _radii() {
         ;;
       list|ls)
         _radii_compreply -W "$global_flags --available --installed --compatible" -- "$cur"
+        ;;
+      config)
+        _radii_compreply -W "partner-repos" -- "$cur"
         ;;
       *)
         _radii_compreply -W "$global_flags" -- "$cur"

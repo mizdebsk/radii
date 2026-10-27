@@ -11,13 +11,13 @@ import (
 	"github.com/mizdebsk/radii/internal/log"
 )
 
-func readRepoStates(path string) (map[string]bool, error) {
+func parseRepoFile(path string) (map[string]map[string]string, error) {
 	f, err := os.Open(filepath.Clean(path))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to read repository definitions from %s: %w", path, err)
+		return nil, fmt.Errorf("failed to read %s: %w", path, err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -25,19 +25,21 @@ func readRepoStates(path string) (map[string]bool, error) {
 		}
 	}()
 
-	sc := bufio.NewScanner(f)
-	states := make(map[string]bool)
+	sections := make(map[string]map[string]string)
 	section := ""
 
+	sc := bufio.NewScanner(f)
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
-		if line == "" {
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			section = strings.TrimSpace(line[1 : len(line)-1])
-			states[section] = false
+			if _, exists := sections[section]; !exists {
+				sections[section] = make(map[string]string)
+			}
 			continue
 		}
 		if section == "" {
@@ -45,14 +47,34 @@ func readRepoStates(path string) (map[string]bool, error) {
 		}
 
 		key, val, found := strings.Cut(line, "=")
-		if found && strings.EqualFold(strings.TrimSpace(key), "enabled") {
-			val = strings.SplitN(val, "#", 2)[0]
-			val = strings.ToLower(strings.TrimSpace(val))
-			states[section] = val == "1" || val == "true" || val == "yes" || val == "on"
+		if !found {
+			continue
 		}
+		k := strings.ToLower(strings.TrimSpace(key))
+		v := strings.TrimSpace(val)
+		if idx := strings.Index(v, "#"); idx >= 0 {
+			v = strings.TrimSpace(v[:idx])
+		}
+		sections[section][k] = v
 	}
 	if err := sc.Err(); err != nil {
+		return nil, fmt.Errorf("failed to read %s: %w", path, err)
+	}
+	return sections, nil
+}
+
+func readRepoStates(path string) (map[string]bool, error) {
+	sections, err := parseRepoFile(path)
+	if err != nil {
 		return nil, fmt.Errorf("failed to read repository definitions from %s: %w", path, err)
+	}
+	if sections == nil {
+		return nil, nil
+	}
+	states := make(map[string]bool)
+	for name, kv := range sections {
+		val := strings.ToLower(kv["enabled"])
+		states[name] = val == "1" || val == "true" || val == "yes" || val == "on"
 	}
 	return states, nil
 }

@@ -6,8 +6,18 @@ import "github.com/mizdebsk/radii/internal/sysinfo"
 
 type RepositoryManager interface {
 	SetSubscriptionsEnabled(enabled bool)
+	SubscriptionsAvailable() bool
+	EnsurePartnerReposEnabled(providerID string, repos []PartnerRepo) error
+	PartnerRepoDNFArgs(repos []PartnerRepo) ([]string, error)
 	EnsureRepositoriesEnabled(channels []string) error
 	GetRepoIDs(channels []string) ([]string, error)
+}
+
+type PartnerRepo struct {
+	RepoID  string
+	Name    string
+	BaseURL string
+	GPGKey  string
 }
 
 type DriverID struct {

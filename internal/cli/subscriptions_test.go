@@ -19,6 +19,7 @@ func TestSkipSubscriptionsUsesExistingSources(t *testing.T) {
 			p := mocks.NewMockProvider(ctrl)
 			p.EXPECT().GetID().Return("amdgpu").AnyTimes()
 			p.EXPECT().GetName().Return("AMD GPU").AnyTimes()
+			p.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 			p.EXPECT().RequiredChannels().Return([]string{"UnconfiguredTestChannel"})
 			configured := pm.EXPECT().SetEnableRepos(gomock.Nil())
 			drivers := []api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}

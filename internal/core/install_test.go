@@ -51,6 +51,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("failed to list"))
 			},
@@ -65,6 +66,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
@@ -94,6 +96,7 @@ func TestInstallSpecific(t *testing.T) {
 				}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
@@ -112,6 +115,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
@@ -142,6 +146,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return(nil, fmt.Errorf("install failed"))
 			},
@@ -159,6 +164,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(fmt.Errorf("dnf failed"))
@@ -174,6 +180,8 @@ func TestInstallSpecific(t *testing.T) {
 			mockProvider := mocks.NewMockProvider(ctrl)
 			mockPM := mocks.NewMockPackageManager(ctrl)
 			mockRM := mocks.NewMockRepositoryManager(ctrl)
+			mockRM.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
+			mockProvider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 
 			tt.setup(mockProvider, mockPM, mockRM)
 
@@ -213,6 +221,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
 			},
@@ -225,6 +234,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("list failed"))
 			},
@@ -241,6 +251,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
@@ -256,6 +267,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().ListAvailable().Return([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}, nil)
 				p.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 				rm.EXPECT().EnsureRepositoriesEnabled([]string{"TestChannel"}).Return(nil)
+				rm.EXPECT().GetRepoIDs([]string{"TestChannel"}).Return(nil, nil)
 				pm.EXPECT().SetEnableRepos(gomock.Nil())
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}, api.KernelTarget{Arch: "x86_64"}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
 				pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, false, false).Return(nil)
@@ -283,6 +295,8 @@ func TestInstallAutoDetect(t *testing.T) {
 				mockProvider := mocks.NewMockProvider(ctrl)
 				mockPM := mocks.NewMockPackageManager(ctrl)
 				mockRM := mocks.NewMockRepositoryManager(ctrl)
+				mockRM.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
+				mockProvider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 
 				tt.setup(mockProvider, mockPM, mockRM)
 

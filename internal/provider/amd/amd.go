@@ -31,6 +31,10 @@ func (p *prov) RequiredChannels() []string {
 	return []string{"BaseOS", "AppStream", "Extensions"}
 }
 
+func (p *prov) RequiredPartnerRepos() []api.PartnerRepo {
+	return nil
+}
+
 func NewProvider(pm api.PackageManager) api.Provider {
 	return &prov{
 		PM: pm,

@@ -36,8 +36,10 @@ func TestInstallDriverSelection(t *testing.T) {
 			provider := mocks.NewMockProvider(ctrl)
 			pm := mocks.NewMockPackageManager(ctrl)
 			rm := mocks.NewMockRepositoryManager(ctrl)
+			rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 			provider.EXPECT().GetID().Return(tt.provider).AnyTimes()
 			provider.EXPECT().GetName().Return(tt.provider).AnyTimes()
+			provider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 			provider.EXPECT().RequiredChannels().Return([]string{"TestChannel"})
 			var available []api.DriverID
 			for _, version := range tt.versions {
@@ -76,8 +78,10 @@ func TestInstallAliasesWithoutAvailableDrivers(t *testing.T) {
 			provider := mocks.NewMockProvider(ctrl)
 			pm := mocks.NewMockPackageManager(ctrl)
 			rm := mocks.NewMockRepositoryManager(ctrl)
+			rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 			provider.EXPECT().GetID().Return("nvidia").AnyTimes()
 			provider.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+			provider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 			provider.EXPECT().DetectHardware().Return(true, nil)
 			provider.EXPECT().RequiredChannels().Return(nil)
 			rm.EXPECT().GetRepoIDs(gomock.Any()).Return(nil, nil)

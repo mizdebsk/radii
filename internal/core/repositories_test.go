@@ -39,11 +39,15 @@ func TestListSelectsProviderChannels(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			rm := mocks.NewMockRepositoryManager(ctrl)
+			rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 			pm := mocks.NewMockPackageManager(ctrl)
 			nv := mocks.NewMockProvider(ctrl)
 			am := mocks.NewMockProvider(ctrl)
 			third := mocks.NewMockProvider(ctrl)
 			providers := []api.Provider{nv, am, third}
+			for _, p := range []*mocks.MockProvider{nv, am, third} {
+				p.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
+			}
 			var detections []*gomock.Call
 			for i, p := range []*mocks.MockProvider{nv, am, third} {
 				p.EXPECT().GetName().Return([]string{"NVIDIA", "AMD GPU", "Third GPU"}[i]).AnyTimes()

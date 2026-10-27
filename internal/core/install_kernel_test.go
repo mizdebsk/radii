@@ -28,9 +28,11 @@ func TestInstallPassesKernelTarget(t *testing.T) {
 				provider := mocks.NewMockProvider(ctrl)
 				pm := mocks.NewMockPackageManager(ctrl)
 				rm := mocks.NewMockRepositoryManager(ctrl)
+				rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 				drivers := []api.DriverID{{ProviderID: "nvidia", Version: "580.178.04"}}
 				provider.EXPECT().GetID().Return("nvidia").AnyTimes()
 				provider.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				provider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 				provider.EXPECT().DetectHardware().Return(true, nil)
 				provider.EXPECT().ListAvailable().Return(drivers, nil)
 				provider.EXPECT().RequiredChannels().Return([]string{"TestChannel"})

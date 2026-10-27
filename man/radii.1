@@ -27,6 +27,10 @@
 .Op Fl -compatible
 .Pp
 .Nm
+.Cm config
+.Op Ar key Op Ar value
+.Pp
+.Nm
 .Fl -help
 .Nm
 .Fl -version
@@ -132,6 +136,19 @@ version.
 Use
 .Fl -all
 to remove all managed driver stacks, including leftover kernel modules.
+.It Cm config
+View or modify persistent configuration stored in
+.Pa /etc/radii/config.yaml .
+Without arguments, show the current configuration.
+With one argument, show the value of that key.
+With two arguments, set the key to the given value.
+.Pp
+Supported keys:
+.Bl -tag -width "partner-repos"
+.It partner-repos
+Enable or disable partner repository for NVIDIA CUDA packages
+.Pq Cm true No or Cm false .
+.El
 .It Cm list
 Display information about driver stacks.
 If no options are given,
@@ -169,6 +186,16 @@ Increase informational output.
 Enable detailed diagnostic output intended for troubleshooting.
 .It Fl -help
 Display usage information and exit.
+.It Fl -partner-repo
+Use partner repository instead of standard RHEL repositories.
+This overrides the persistent
+.Cm partner-repos
+setting stored in
+.Pa /etc/radii/config.yaml .
+The partner repository provides packages directly from the hardware
+vendor through Red Hat's partner infrastructure.
+To enable persistently, use
+.Ql Nm Cm config partner-repos true .
 .It Fl -skip-subscriptions
 Skip Red Hat Subscription Manager (RHSM) setup.
 Repositories must already be configured; packages will be installed

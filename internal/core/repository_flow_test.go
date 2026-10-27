@@ -31,14 +31,19 @@ func TestInstallValidatesAllArgumentsBeforeRepositorySetup(t *testing.T) {
 func TestExplicitMixedInstallPreparesSelectedProviders(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	rm := mocks.NewMockRepositoryManager(ctrl)
+	rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 	pm := mocks.NewMockPackageManager(ctrl)
 	nv := mocks.NewMockProvider(ctrl)
 	am := mocks.NewMockProvider(ctrl)
 	unused := mocks.NewMockProvider(ctrl)
 	unused.EXPECT().GetID().Return("unused").AnyTimes()
 	providers := []api.Provider{nv, am, unused}
+	for _, p := range []*mocks.MockProvider{nv, am, unused} {
+		p.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
+	}
 	prepared := rm.EXPECT().EnsureRepositoriesEnabled([]string{"BaseOS", "Supplementary", "Extensions"}).Return(nil)
-	configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(prepared)
+	resolved := rm.EXPECT().GetRepoIDs([]string{"BaseOS", "Supplementary", "Extensions"}).After(prepared).Return(nil, nil)
+	configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(resolved)
 	for i, p := range []*mocks.MockProvider{nv, am} {
 		id := []string{"nvidia", "amdgpu"}[i]
 		channels := [][]string{{"BaseOS", "Supplementary"}, {"BaseOS", "Extensions"}}[i]
@@ -59,17 +64,20 @@ func TestExplicitMixedInstallPreparesSelectedProviders(t *testing.T) {
 func TestAutoDetectPreparesRepositoriesAfterDetection(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	rm := mocks.NewMockRepositoryManager(ctrl)
+	rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 	pm := mocks.NewMockPackageManager(ctrl)
 	selected := mocks.NewMockProvider(ctrl)
 	absent := mocks.NewMockProvider(ctrl)
 	selected.EXPECT().GetID().Return("third").AnyTimes()
 	selected.EXPECT().GetName().Return("Third GPU").AnyTimes()
 	absent.EXPECT().GetID().Return("absent").AnyTimes()
+	selected.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 	detected := selected.EXPECT().DetectHardware().Return(true, nil)
 	notDetected := absent.EXPECT().DetectHardware().Return(false, nil)
 	selected.EXPECT().RequiredChannels().Return([]string{"ThirdChannel"})
 	prepared := rm.EXPECT().EnsureRepositoriesEnabled([]string{"ThirdChannel"}).After(detected).After(notDetected).Return(nil)
-	configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(prepared)
+	resolved := rm.EXPECT().GetRepoIDs([]string{"ThirdChannel"}).After(prepared).Return(nil, nil)
+	configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(resolved)
 	available := selected.EXPECT().ListAvailable().After(configured).Return([]api.DriverID{{ProviderID: "third", Version: "1"}}, nil)
 	selected.EXPECT().Install([]api.DriverID{{ProviderID: "third", Version: "1"}}, api.KernelTarget{Arch: "x86_64"}).After(available).Return([]string{"third-pkg"}, nil)
 	pm.EXPECT().Install([]string{"third-pkg"}, false, false).Return(nil)
@@ -82,10 +90,12 @@ func TestAutoDetectPreparesRepositoriesAfterDetection(t *testing.T) {
 func TestListClearsRepositoryOverrides(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	rm := mocks.NewMockRepositoryManager(ctrl)
+	rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 	pm := mocks.NewMockPackageManager(ctrl)
 	provider := mocks.NewMockProvider(ctrl)
 	provider.EXPECT().GetName().Return("Third GPU").AnyTimes()
 	provider.EXPECT().RequiredChannels().Return([]string{"ThirdChannel"})
+	provider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 	resolved := rm.EXPECT().GetRepoIDs([]string{"ThirdChannel"}).Return(nil, nil)
 	cleared := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(resolved)
 	provider.EXPECT().ListAvailable().After(cleared).Return(nil, nil)
@@ -150,16 +160,19 @@ func TestExplicitInstallDetectsProviderBeforeRepositories(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			provider := mocks.NewMockProvider(ctrl)
 			rm := mocks.NewMockRepositoryManager(ctrl)
+			rm.EXPECT().SubscriptionsAvailable().Return(true).AnyTimes()
 			pm := mocks.NewMockPackageManager(ctrl)
 			provider.EXPECT().GetID().Return("nvidia").AnyTimes()
 			provider.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+			provider.EXPECT().RequiredPartnerRepos().Return(nil).AnyTimes()
 			channels := provider.EXPECT().RequiredChannels().Return([]string{"BaseOS"})
 			if !tt.force {
 				detected := provider.EXPECT().DetectHardware().Return(tt.detectErr == nil, tt.detectErr)
 				channels.After(detected)
 			}
 			prepared := rm.EXPECT().EnsureRepositoriesEnabled([]string{"BaseOS"}).After(channels).Return(nil)
-			configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(prepared)
+			resolved := rm.EXPECT().GetRepoIDs([]string{"BaseOS"}).After(prepared).Return(nil, nil)
+			configured := pm.EXPECT().SetEnableRepos(gomock.Nil()).After(resolved)
 			drivers := []api.DriverID{{ProviderID: "nvidia", Version: "580.100"}, {ProviderID: "nvidia", Version: "580.9"}}
 			provider.EXPECT().ListAvailable().After(configured).Return(drivers, nil).Times(2)
 			provider.EXPECT().Install(drivers, api.KernelTarget{Arch: "x86_64"}).Return([]string{"selected-packages"}, nil)

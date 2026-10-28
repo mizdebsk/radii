@@ -18,10 +18,9 @@ Options:
   --verbose              Increase output verbosity
   --quiet                Suppress informational output
   --skip-subscriptions   Skip Red Hat Subscription Manager (RHSM) setup
-  --partner-repo         Use partner repository instead of RHEL repos (overrides config)
-                         Persistent setting: %s config partner-repos true
+  --partner-repo=BOOL    Use partner repository instead of RHEL repos (overrides config)
   --version              Show program version
-`, progName, progName, progName)
+`, progName, progName)
 }
 
 func printInstallUsage() {

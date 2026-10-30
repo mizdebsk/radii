@@ -3,6 +3,7 @@ package rhsm
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
@@ -13,6 +14,24 @@ var partnerRepoDir = "/etc/yum.repos.d"
 
 func partnerRepoFilePath(providerID string) string {
 	return fmt.Sprintf("%s/radii-%s-partner.repo", partnerRepoDir, providerID)
+}
+
+func (rm *repoMgr) partnerReposOnDisk(repos []api.PartnerRepo) bool {
+	needed := make(map[string]bool)
+	for _, repo := range repos {
+		needed[rm.resolveDNFVars(repo.RepoID)] = true
+	}
+	files, _ := filepath.Glob(partnerRepoDir + "/radii-*-partner.repo")
+	for _, f := range files {
+		sections, err := parseRepoFile(f)
+		if err != nil {
+			continue
+		}
+		for name := range sections {
+			delete(needed, name)
+		}
+	}
+	return len(needed) == 0
 }
 
 func (rm *repoMgr) resolveDNFVars(s string) string {

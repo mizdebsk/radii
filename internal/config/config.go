@@ -1,19 +1,18 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"gopkg.in/yaml.v3"
 )
 
 const (
-	DefaultConfigPath = "/etc/radii/config.yaml"
+	DefaultConfigPath = "/etc/radii/config.json"
 )
 
 type Config struct {
-	PartnerRepos bool `yaml:"partner-repos"`
+	PartnerRepos bool `json:"partner-repos"`
 }
 
 func Load(path string) (Config, error) {
@@ -25,7 +24,7 @@ func Load(path string) (Config, error) {
 		}
 		return cfg, fmt.Errorf("failed to read config file %s: %w", path, err)
 	}
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
+	if err := json.Unmarshal(data, &cfg); err != nil {
 		return cfg, fmt.Errorf("failed to parse config file %s: %w", path, err)
 	}
 	return cfg, nil
@@ -36,7 +35,7 @@ func Save(path string, cfg Config) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory %s: %w", dir, err)
 	}
-	data, err := yaml.Marshal(&cfg)
+	data, err := json.Marshal(&cfg)
 	if err != nil {
 		return fmt.Errorf("failed to serialize config: %w", err)
 	}

@@ -71,7 +71,7 @@ func printConfigUsage() {
   %s config                Show current configuration
   %s config <key> <value>  Set a configuration value
 
-Configuration is stored in /etc/radii/config.yaml (YAML format).
+Configuration is stored in /etc/radii/config.json (JSON format).
 
 Keys:
   partner-repos   Enable partner repository for NVIDIA CUDA packages (true/false)

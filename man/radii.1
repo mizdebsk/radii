@@ -138,7 +138,7 @@ Use
 to remove all managed driver stacks, including leftover kernel modules.
 .It Cm config
 View or modify persistent configuration stored in
-.Pa /etc/radii/config.yaml .
+.Pa /etc/radii/config.json .
 Without arguments, show the current configuration.
 With one argument, show the value of that key.
 With two arguments, set the key to the given value.
@@ -191,7 +191,7 @@ Use partner repository instead of standard RHEL repositories.
 This overrides the persistent
 .Cm partner-repos
 setting stored in
-.Pa /etc/radii/config.yaml .
+.Pa /etc/radii/config.json .
 The partner repository provides packages directly from the hardware
 vendor through Red Hat's partner infrastructure.
 To enable persistently, use

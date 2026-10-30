@@ -33,10 +33,8 @@ func prepareRepositories(deps api.CoreDeps, providers []api.Provider, readOnly b
 	if err != nil {
 		return fmt.Errorf("failed to determine query repositories: %w", err)
 	}
-	if !readOnly {
-		for _, pr := range partnerRepos {
-			repos = append(repos, pr.RepoID)
-		}
+	for _, pr := range partnerRepos {
+		repos = append(repos, pr.RepoID)
 	}
 	deps.PackageManager.SetEnableRepos(repos)
 

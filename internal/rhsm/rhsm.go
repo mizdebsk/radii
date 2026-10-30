@@ -58,6 +58,9 @@ func (rm *repoMgr) PartnerRepoDNFArgs(repos []api.PartnerRepo) ([]string, error)
 	if len(repos) == 0 {
 		return nil, nil
 	}
+	if rm.partnerReposOnDisk(repos) {
+		return nil, nil
+	}
 	return rm.partnerRepoDNFArgs(repos)
 }
 

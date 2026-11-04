@@ -10,6 +10,7 @@ import (
 	"github.com/mizdebsk/radii/internal/dnf"
 	"github.com/mizdebsk/radii/internal/exec"
 	"github.com/mizdebsk/radii/internal/provider/amd"
+	"github.com/mizdebsk/radii/internal/provider/intel"
 	"github.com/mizdebsk/radii/internal/provider/nvidia"
 	"github.com/mizdebsk/radii/internal/rhsm"
 	"github.com/mizdebsk/radii/internal/sysinfo"
@@ -29,7 +30,7 @@ func main() {
 
 	packageManager := dnf.NewPackageManager(executor)
 	repositoryManager := rhsm.NewRepositoryManager(executor, systemInfo)
-	providers := []api.Provider{nvidia.NewProvider(packageManager), amd.NewProvider(packageManager)}
+	providers := []api.Provider{nvidia.NewProvider(packageManager), amd.NewProvider(packageManager), intel.NewProvider(packageManager)}
 	deps := api.CoreDeps{
 		SystemInfo:        systemInfo,
 		PackageManager:    packageManager,

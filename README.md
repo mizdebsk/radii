@@ -25,4 +25,8 @@ make up a driver stack.  In anatomy, the radii are the bones that let
 your hands move, serving as a simple metaphor for enabling hardware to
 work.
 
+See the [manual page](MAN.md) for usage details.  The markdown
+manual is generated from the man pages with `make MAN.md`; regenerate
+it after changing files under `man/`.
+
 Licensed under GPL v3 or later.
